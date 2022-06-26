@@ -1,0 +1,25 @@
+{
+  "name": "filter-sort-table",
+  "private": true,
+  "version": "0.0.0",
+  "main": "dist/filter-sort-table.es.js",
+  "exports": {
+    ".": "./dist/filter-sort-table.es.js"
+  },
+  "types": "types/filter-sort-table.d.ts",
+  "files": [
+    "dist",
+    "types"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  },
+  "dependencies": {
+    "lit": "^2.0.2"
+  },
+  "devDependencies": {
+    "vite": "^2.9.9",
+    "typescript": "^4.5.4"
+  }
+}
