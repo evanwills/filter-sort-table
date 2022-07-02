@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/src/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + Lit App</title>
-    <script type="module" src="/src/filter-sort-table.ts"></script>
-  </head>
-  <body>
-    <filter-sort-table>
-      <p>This is child content</p>
-    </filter-sort-table>
-  </body>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/src/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>filter-sort-table</title>
+		<link rel="stylesheet" href="src/css/style.css" />
+		<script type="module" src="/src/filter-sort-table.ts"></script>
+		<script type="module" src="/src/data/form-data.ts"></script>
+		<style>
+			:root {
+				--text-colour: #000;
+			}
+		</style>
+	</head>
+	<body>
+		<filter-sort-table id="blah">
+		</filter-sort-table>
+	</body>
 </html>

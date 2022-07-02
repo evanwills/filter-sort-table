@@ -1,8 +1,9 @@
+/// <reference types="vite/client" />
+
 import { TemplateResult } from 'lit';
 import { TabAccordion } from '../view/customElements/tab-accordion';
 import { IAction, IBaseStateItem } from './Iredux-extra';
 
-/// <reference types="vite/client" />
 
 export type UScalar = string | number | boolean;
 export type UScalarA = string | number | boolean | Array<UScalar>;
@@ -114,6 +115,9 @@ export interface IEventHandler {
   actions: IObjStr
 }
 
+
+export type UDataType = 'text' | 'number' | 'date' | 'datetime' | 'bool' | 'option' | 'count';
+
 /**
  * Used for boolean filters
  * (equivalent to: ignore | include | exclude)
@@ -134,7 +138,7 @@ export interface IListCtrlOptionItem {
  */
 export interface  IListCtrlItem {
   /**
-   * Name of the field being filtered/sorted
+   * Property name of the field being filtered/sorted
    */
   field: string,
   /**
@@ -142,14 +146,21 @@ export interface  IListCtrlItem {
    *
    * * text
    * * number
+   * * date
+   * * datetime
    * * bool
    * * option
    */
-  type: string,
+  type: UDataType,
+  /**
+   * Normally, empty values are ignored. This causes only items with
+   * empty values to be included in the list
+   */
+  filterOnEmpty: boolean,
   /**
    * Value on which to filter
    */
-  filter: string,
+  filter: string|number,
   /**
    * For date & number fields this sets the lower limit of values
    */
@@ -174,7 +185,10 @@ export interface  IListCtrlItem {
    *  * -1 - ascending
    */
   order: UBoolState,
-
+  /**
+   * for fixed option fields, whether or not to order option label
+   * or value
+   */
   orderByValue: boolean
 }
 

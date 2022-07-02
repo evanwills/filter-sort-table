@@ -1,4 +1,4 @@
-import { IKeyValueNum, IObjScalar, sanTxtMods } from "../types/Igeneral.d"
+import { IKeyValueNum, IObjScalar, sanTxtMods } from "../types/Igeneral"
 import { isNonEmptyStr, isNumeric } from "./validation"
 
 /**

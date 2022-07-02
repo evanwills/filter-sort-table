@@ -2,14 +2,13 @@ import { html, TemplateResult } from 'lit';
 // import { customElement, property, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 
-import { UBoolState, FEventHandler, IDbEnum, IListCtrlOptionItem, IListCtrlItem } from '../../types/Igeneral';
+import { UBoolState, FEventHandler, IDbEnum, IListCtrlOptionItem, IListCtrlItem, UDataType } from '../types/Igeneral';
 
-import { isInt, isNumber } from '../../utilities/validation';
-// import { isoStrToTime } from '../../utilities/utilities/sanitise';
-import { getBoolState } from '../../utilities/general.utils';
-import { IFilterSortCtrl } from '../../types/IFilterSortCtrl';
-import { IBaseStateItem } from '../../types/Iredux-extra';
-import { getFullName } from './general.view';
+import { isInt, isNumber } from './validation';
+// import { isoStrToTime } from './sanitise';
+import { getBoolState } from './general.utils';
+import { IFilterSortCtrl } from '../types/IFilterSortCtrl';
+import { UScalarX } from '../types/Igeneral';
 
 
 /**
@@ -196,7 +195,7 @@ export const getInput = (
   id: string, label: string, value : string|number, field: string, data: IFilterSortCtrl, handler: FEventHandler
 ) : TemplateResult => {
   const _id = id + '__' + field;
-  let _type = data.dataType;
+  let _type : string = data.dataType;
   let _value = value;
   let _special : TemplateResult|string = '';
 
@@ -323,29 +322,21 @@ const filterOnOptions = (options : Array<IListCtrlOptionItem>, id: number) : boo
  * @returns TRUE if item was *NOT* excluded by any of the filters.
  *          FALSE otherwise
  */
-const filterSortFilter = (item : IBaseStateItem, listCtrl: Array<IListCtrlItem>) : boolean => {
+const filterSortFilter = (item : UScalarX, listCtrl: Array<IListCtrlItem>) : boolean => {
   for (let a = 0; a < listCtrl.length; a += 1) {
     const ctl = listCtrl[a];
     const _type = typeof item[ctl.field];
 
-    if (ctl.field !== 'fullname' && _type === 'undefined') {
+    if (_type === 'undefined') {
         throw new Error(
         'Cannot filter on `' + ctl.field + '` if item does contain that property'
       );
     }
 
-    let _val = item[ctl.field]
+    let _val = item[ctl.field];
 
     switch (ctl.type) {
       case 'text':
-        if (ctl.field === 'fullname') {
-          try {
-            _val = getFullName(item);
-          } catch (error) {
-            throw Error(error.toString());
-          }
-        }
-
         if (_val.toLowerCase().indexOf(ctl.filter.toLowerCase()) === -1) {
           return false;
         }
@@ -401,7 +392,7 @@ const filterSortFilter = (item : IBaseStateItem, listCtrl: Array<IListCtrlItem>)
 }
 
 /**
- * Test a single item to see if it passes all the fitlers.
+ * Order all items in the list so they are sorted as required
  *
  * @var items    List of state items to be rendered
  * @var listCtrl List of filter & sort controls for the suplied state
@@ -409,7 +400,7 @@ const filterSortFilter = (item : IBaseStateItem, listCtrl: Array<IListCtrlItem>)
  * @returns TRUE if item was *NOT* excluded by any of the filters.
  *          FALSE otherwise
  */
-const filterSortSort = (items : Array<IBaseStateItem>, listCtrl: Array<IListCtrlItem>) : Array<IBaseStateItem> => {
+const filterSortSort = (items : Array<UScalarX>, listCtrl: Array<IListCtrlItem>) : Array<UScalarX> => {
   if (listCtrl.length === 0) {
     // Nothing to sort so just return input unchanged
     return items;
@@ -420,53 +411,38 @@ const filterSortSort = (items : Array<IBaseStateItem>, listCtrl: Array<IListCtrl
   // clone will be fine.
   const output = [...items];
 
-  output.sort((a : IBaseStateItem, b : IBaseStateItem) => {
+  output.sort((a : UScalarX, b : UScalarX) => {
     const tmp = [...listCtrl];
     let next = tmp.shift();
 
     while (typeof next !== 'undefined') {
       const ctl = next;
       next = tmp.shift();
-      let aVal;
-      let bVal;
+      const _aType = typeof a[ctl.field];
+      const _bType = typeof b[ctl.field];
 
       if (ctl.order === 0) {
+        // Sort order is set to Ignore
         continue;
       }
 
-      if (ctl.field === 'fullname') {
-        try {
-          aVal = getFullName(a);
-        } catch (error) {
-          throw Error(error.toString());
-        }
-        try {
-          bVal = getFullName(b);
-        } catch (error) {
-          throw Error(error.toString());
-        }
-      } else {
-        const _aType = typeof a[ctl.field];
-        const _bType = typeof b[ctl.field];
-        if (_aType === 'undefined' || _bType === 'undefined') {
-          console.log('ctl:', ctl)
-          console.log('a:', a)
-          console.log('b:', b)
-          console.error('one of the items didn\'t have the right field')
+      if (_aType === 'undefined' || _bType === 'undefined') {
+        console.log('ctl:', ctl)
+        console.log('a:', a)
+        console.log('b:', b)
+        console.error('one of the items didn\'t have the right field')
 
-          continue;
-        } else if (_aType !== _bType) {
-          console.log('ctl:', ctl);
-          console.log('a:', a);
-          console.log('b:', b);
-          console.error('type of field in A doesn\'t match type of field in B');
+        continue;
+      } else if (_aType !== _bType) {
+        console.log('ctl:', ctl);
+        console.log('a:', a);
+        console.log('b:', b);
+        console.error('type of field in A doesn\'t match type of field in B');
 
-          continue;
-        } else {
-          aVal = a[ctl.field];
-          bVal = b[ctl.field];
-        }
+        continue;
       }
+      const aVal = a[ctl.field];
+      const bVal = b[ctl.field];
 
       if (aVal < bVal) {
         return ctl.order * -1;
@@ -492,9 +468,9 @@ const filterSortSort = (items : Array<IBaseStateItem>, listCtrl: Array<IListCtrl
  *
  * @returns Filtered & sorted list of items
  */
-export const filterAndSort = (items : Array<IBaseStateItem>, listCtrl : Array<IListCtrlItem>) : Array<IBaseStateItem> => {
+export const filterAndSort = (items : Array<UScalarX>, listCtrl : Array<IListCtrlItem>) : Array<UScalarX> => {
   return filterSortSort(
-    items.filter((item : IBaseStateItem) : boolean => filterSortFilter(item, listCtrl)),
+    items.filter((item : UScalarX) : boolean => filterSortFilter(item, listCtrl)),
     listCtrl
   );
 }
@@ -511,4 +487,24 @@ export const getFilterData = (listCtrl : Array<IListCtrlItem>) => (field: string
   return (tmp.length === 1)
     ? tmp[0]
     : null;
+}
+
+
+export const getDataType = (input : string) : UDataType => {
+  const _input = input.toLowerCase();
+
+  switch (_input) {
+    case 'text':
+    case 'number':
+    case 'date':
+    case 'datetime':
+    case 'bool':
+    case 'option':
+    case 'count':
+      return _input;
+
+    default:
+      console.error('Could not match data type: "' + input + '"');
+      return 'text';
+  }
 }

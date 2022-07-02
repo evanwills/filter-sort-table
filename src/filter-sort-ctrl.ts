@@ -4,13 +4,13 @@ import { customElement, property, state } from 'lit/decorators.js';
 
 import { UBoolState, IDbEnum, IListCtrlItem, IListCtrlOptionItem } from './types/Igeneral';
 
-import { style } from './css/styles.css';
+import { style } from './css/filter-sort-ctrl.css';
 
 // import { isInt, isNumber, isStr } from './utilities/validation';
 import { isoStrToTime } from './utilities/sanitise';
 import { getBoolState } from './utilities/general.utils';
-import { getInput, getOptMode, getOptStr, getUpdatedFilterOpt, getToggleInput, parseOptStr } from './utilities/filter-sort.utils';
-import { IFilterSortCtrl } from './types/IFilterSortCtrl';
+import { getInput, getOptMode, getOptStr, getUpdatedFilterOpt, getToggleInput, parseOptStr, getDataType } from './utilities/filter-sort.utils';
+import { IFilterSortCtrl, UDataType } from './types/IFilterSortCtrl';
 
 
 
@@ -39,7 +39,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
    * * option   - Select/Radio field (mulit include/exclude/ignore)
    */
   @property({ type: String })
-  dataType : string = 'text';
+  dataType : UDataType = 'text';
 
   /**
    * Which bit of state is being filtered
@@ -61,7 +61,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
    * * 0  = Not ordered by this column
    */
   @property({ type: Number })
-  order : number = 0;
+  order : UBoolState = 0;
 
   /**
    * For option filters childID is the ID of the option that was
@@ -168,7 +168,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
       ? this.dataset.datatype
       : 'text';
 
-    this.dataType = this.dataset.datatype;
+    this.dataType = getDataType(this.dataset.datatype);
 
     // See if we have any predefined state
     if (this.stateData !== null) {

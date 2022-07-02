@@ -1,0 +1,15 @@
+:root {
+  --bg-colour: #fff;
+  --btn-padding-top: 1.3rem;
+  --over-colour: rgba(0, 0, 0, 0.85);
+  --over-colour--rev: rgba(255, 255, 255, 0.85);
+  --text-colour: #000;
+  --trans-speed: 0.3s;
+  --line-weight: 0.05rem;
+  --line-weight-hvy: 0.1rem;
+  --timing: 0.4s;
+  --ease: ease-in-out;
+  --border-radius: 1rem;
+  --true-icon: "+";
+  --false-icon: "\u2013";
+}

@@ -1,13 +1,13 @@
 import { IDbEnum, IListCtrlItem, UBoolState } from "./Igeneral"
 
-type UDataType = 'text' | 'number' | 'date' | 'datetime' | 'bool' | 'option' | 'count';
+export type UDataType = 'text' | 'number' | 'date' | 'datetime' | 'bool' | 'option' | 'count';
 
 export type IFilterSortCtrl = {
   action : string,
   dataType : UDataType,
   stateSlice : string,
   colName : string,
-  order : number,
+  order : UBoolState,
   childID : number,
   filter : string | number,
   min : number,

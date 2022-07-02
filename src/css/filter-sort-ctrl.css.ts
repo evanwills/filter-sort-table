@@ -10,7 +10,7 @@ export const style : CSSResult = css`
       --btn-padding-top: 1.3rem;
       --over-colour: rgba(0, 0, 0, 0.85);
       --over-colour--rev: rgba(255, 255, 255, 0.85);
-      --text-colour: #fff;
+      --text-colour: #000;
       --trans-speed: 0.3s;
       --line-weight: 0.05rem;
       --line-weight-hvy: 0.1rem;
@@ -19,11 +19,12 @@ export const style : CSSResult = css`
       --border-radius: 1rem;
       --true-icon: "+";
       --false-icon: "\u2013";
+      --modal-text-colour: #fff;
     }
     ${srOnly}
     .wrap {
       background-color: var(--bg-colour);
-      color: var(--text-colour);
+      color: var(--modal-text-colour);
       left: 50%;
       max-width: 35rem;
       opacity: 0;
@@ -99,7 +100,7 @@ export const style : CSSResult = css`
       background-color: var(--text-colour);
       border-radius: 1rem;
       border: none;
-      color: var(--bg-colour);
+      color: var(--modal-text-colour);
       display: inline-block;
       font-weight: bold;
       height: 1.5rem;
@@ -117,6 +118,7 @@ export const style : CSSResult = css`
     .sort-btn {
       background-color: var(--text-colour);
       border: none;
+      color: var(--modal-text-colour);
       display: block;
       font-weight: bold;
       height: 1.25rem;
