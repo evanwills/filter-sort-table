@@ -100,6 +100,7 @@ export const style : CSSResult = css`
       background-color: var(--text-colour);
       border-radius: 1rem;
       border: none;
+      border: 0.1rem solid var(--modal-text-colour);
       color: var(--modal-text-colour);
       display: inline-block;
       font-weight: bold;
@@ -194,4 +195,21 @@ export const style : CSSResult = css`
     }
     ${radioList()}
     ${cbBtn}
+
+    .cb-btn__label, .radio-list__wrap, .radio-list__label {
+      --bg-colour: var(--over-colour);
+      --text-colour: var(--modal-text-colour);
+    }
+    .option-list {
+      margin: 0;
+      padding: 0;
+    }
+    .option-list__item {
+      list-style-type: none;
+      display: flex;
+      align-items: center;
+    }
+    .option-list__label {
+      flex-grow: 1;
+    }
   `;

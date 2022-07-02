@@ -122,8 +122,8 @@ export const getOption = (
 ) : TemplateResult => {
   const val = getOptMode(option.id, filters);
   return html`
-    <li>
-      ${option.name}:
+    <li class="option-list__item">
+      <span class="option-list__label">${option.name}:</span>
       ${incIgnoreExc(id + '__' + option.id , val, handler, option.id, inc, exc)}
     </li>
   `
@@ -138,7 +138,7 @@ export const getOptions = (
   exc: string = 'Exclude'
 ) : TemplateResult => {
   return html`
-    <ul>
+    <ul class="option-list">
       ${options.map((option : IDbEnum) => getOption(id, option, filteredOptions, handler, inc, exc))}
     </ul>
   `;

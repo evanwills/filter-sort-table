@@ -1,6 +1,4 @@
 import { css } from "lit";
-import { cbBtn } from "./cb-btn.css";
-import { radioList } from "./radio-list.css";
 import { srOnly } from "./sr-only.css";
 
 export const style = css`
@@ -12,10 +10,6 @@ export const style = css`
     --cell-h-padding: 0.75rem;
     --text-colour: #000;
   }
-
-  ${srOnly}
-  ${cbBtn}
-  ${radioList()}
 
   table {
     border: var(--table-border);

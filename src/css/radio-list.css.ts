@@ -5,7 +5,7 @@ export const radioList = (minWidth: number = 35) : CSSResult => {
     .radio-list__wrap {
       align-content: stretch;
       align-items: stretch;
-      border: var(--line-weight-hvy) solid var(--txt-colour);
+      border: var(--line-weight-hvy) solid var(--text-colour);
       border-radius: var(--border-radius);
       display: flex;
       flex-direction: column;
@@ -35,7 +35,7 @@ export const radioList = (minWidth: number = 35) : CSSResult => {
     .radio-list {
       align-content: stretch;
       align-items: stretch;
-      border: var(--line-weight-hvy) solid var(--txt-colour);
+      border: var(--line-weight-hvy) solid var(--text-colour);
       border-radius: var(--border-radius);
       display: flex;
       flex-direction: column;
@@ -59,7 +59,7 @@ export const radioList = (minWidth: number = 35) : CSSResult => {
     }
     .radio-list__label {
       /* background-color: var(--bg-colour); */
-      /* color: var(--txt-colour); */
+      /* color: var(--text-colour); */
       border-radius: var(--border-radius);
       display: inline-block;
       /* height: 80%; */
@@ -81,7 +81,7 @@ export const radioList = (minWidth: number = 35) : CSSResult => {
       background-color: var(--bg-colour);
       border: var(--line-weight-hvy) solid var(--bg-colour);
       border-radius: 50%;
-      color: var(--txt-colour);
+      color: var(--text-colour);
       content: "\\02713";
       display: inline-block;
       font-size: 0.86em;
@@ -121,7 +121,7 @@ export const radioList = (minWidth: number = 35) : CSSResult => {
     }
     .radio-list__input:checked + .radio-list__label {
       color: var(--bg-colour);
-      background-color: var(--txt-colour);
+      background-color: var(--text-colour);
       z-index: 1;
     }
     .radio-list__input:checked + .radio-list__label::after {
