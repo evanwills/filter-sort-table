@@ -36,12 +36,14 @@ export const style = css`
   }
   a, filter-sort-ctrl {
     display: inline-block;
-    margin: calc(var(--cell-v-padding) * -1) calc(var(--cell-h-padding) * -1);
+    margin: 0;
+    padding: 0;
+    width: 100%;
   }
   a {
     padding: var(--cell-v-padding) var(--cell-h-padding);
   }
-  filter-sort-ctrl {
+  .filtered-col {
     padding: 0;
   }
 `;

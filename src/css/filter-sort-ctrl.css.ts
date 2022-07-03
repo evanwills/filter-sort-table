@@ -76,7 +76,7 @@ export const style : CSSResult = css`
       background-color: transparent;
       border: none;
       color: var(--text-colour);
-      display: inline-block;
+      display: block;
       font-size: 1rem;
       font-weight: bold;
       padding: 0.75rem 2.5rem 0.75rem 2rem;
@@ -192,6 +192,9 @@ export const style : CSSResult = css`
       background-color: var(--over-colour);
       border: 0.05rem solid var(--over-colour--rev);
       padding: 0.2rem 0.3rem;
+    }
+    .th {
+      width: 100%;
     }
     ${radioList()}
     ${cbBtn}

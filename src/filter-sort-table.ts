@@ -46,8 +46,10 @@ export class FilterSortTable extends LitElement {
 
   static styles = style;
 
-  private _cols : Array<IHeadConfig> = [];
-  private _nonCols : Array<IHeadConfig> = [];
+  @state()
+  cols : Array<IHeadConfig> = [];
+  @state()
+  nonCols : Array<IHeadConfig> = [];
 
   @state()
   listCtrl : Array<IListCtrlItem> = [];
@@ -71,12 +73,32 @@ export class FilterSortTable extends LitElement {
   }
 
   private _setCols() {
-    this._cols = this.headConfig.filter(
+    // console.group('_setCols()')
+    // console.group('_setCols() - before')
+    // console.log('this.cols.length:', this.cols.length)
+    // console.log('this.cols:', this.cols)
+    // console.log('this.nonCols.length:', this.nonCols.length)
+    // console.log('this.nonCols:', this.nonCols)
+    // console.groupEnd();
+
+    this.cols = this.headConfig.filter(
       (col : IHeadConfig) => col.isColumn
+      // (col : IHeadConfig) => {
+      //   console.log('col.label:', col.label)
+      //   console.log('col.isColumn:', col.isColumn)
+      //   return col.isColumn
+      // }
     );
-    this._nonCols = this.headConfig.filter(
+    this.nonCols = this.headConfig.filter(
       (col : IHeadConfig) => !col.isColumn
     );
+    // console.group('_setCols() - after')
+    // console.log('this.cols.length:', this.cols.length)
+    // console.log('this.cols:', this.cols)
+    // console.log('this.nonCols.length:', this.nonCols.length)
+    // console.log('this.nonCols:', this.nonCols)
+    // console.groupEnd();
+    // console.groupEnd();
   }
 
   //  END:  Initialisation method
@@ -86,63 +108,43 @@ export class FilterSortTable extends LitElement {
 
   private _changeHandler(event: Event) : void {
     const filter = event.target as FilterSortCtrl;
-    console.group('_changeHandler()')
 
-    this.headConfig.map((field: IHeadConfig) : IHeadConfig => {
-      if (filter.colName === field.prop) {
+    this.headConfig = this.headConfig.map((field: IHeadConfig) : IHeadConfig => {
+      if (filter.colName === field.field) {
         const output : IHeadConfig = { ...field }
 
-        if (typeof output.ctrl === 'undefined') {
-          // This should never happent but just in case...
-          output.ctrl = {
-            field: output.prop,
-            type: (typeof output.type === 'string')
-              ? output.type
-              : 'text',
-            filterOnEmpty: false,
-            filter: '',
-            min: 0,
-            max: 0,
-            bool: 0,
-            options: [],
-            order: 0,
-            orderByValue: false
-          }
-        }
-
-        console.log('filter:', filter)
         switch(filter.dataset.subtype2) {
           case 'order':
-            output.ctrl.order = filter.order;
+            output.order = filter.order;
             break;
           case 'filter':
-            output.ctrl.filter = filter.filter;
+            output.filter = filter.filter;
             break;
           case 'min':
-            output.ctrl.min = filter.min;
+            output.min = filter.min;
             break;
           case 'max':
-            output.ctrl.max = filter.min;
+            output.max = filter.min;
             break;
           case 'bool':
-            output.ctrl.bool = filter.bool;
+            output.bool = filter.bool;
             break;
           case 'option':
-            output.ctrl.options = filter.filteredOptions;
+            output.options = filter.filteredOptions;
             break;
           case 'isCol':
-            output.isColumn = !output.isColumn;
-            this._setCols();
+            // console.log('output.isColumn (before):', output.isColumn)
+            output.isColumn = filter.isColumn;
+            // console.log('output.isColumn (after):', output.isColumn)
             break;
         }
 
-        console.groupEnd()
         return output;
       } else {
-        console.groupEnd()
         return field;
       }
     })
+    this._setCols();
 
     // this.listCtrl = this.headConfig.filter(item => {
 
@@ -157,35 +159,34 @@ export class FilterSortTable extends LitElement {
 
 
   private _renderColHead = (col : IHeadConfig) : TemplateResult => {
-    if (typeof col.ctrl === 'undefined') {
+    if (col.isFilter === false) {
       return html`
-        <th id="${this.id}--${col.prop}">${col.label}</th>
+        <th id="${this.id}--${col.field}">${col.label}</th>
       `;
     }
-
-    const _col = col.ctrl
 
     const options : Array<IDbEnum>|undefined = (Array.isArray(col.enumList) && col.enumList.length > 0)
       ? col.enumList
       : undefined;
 
     return html`
-        <th id="${this.id}--${_col.field}">
-          <filter-sort-ctrl colname="${_col.field}"
-                            dataType="${_col.type}"
-                            data-dataType="${_col.type}"
-                            filter="${_col.filter}"
-                            min="${_col.min}"
-                            max="${_col.max}"
-                            bool="${_col.bool}"
-                           .statedata=${_col.options}
-                            order="${_col.order}"
-                           .options=${options}
-                           @change=${this._changeHandler}>
-            ${col.label}
-          </filter-sort-ctrl>
-        </th>
-        `
+      <th id="${this.id}--${col.field}" class="filtered-col">
+        <filter-sort-ctrl colname="${col.field}"
+                          dataType="${col.type}"
+                          data-dataType="${col.type}"
+                          filter="${col.filter}"
+                          min="${col.min}"
+                          max="${col.max}"
+                          bool="${col.bool}"
+                          order="${col.order}"
+                          iscolumn="${col.isColumn}"
+                         .statedata=${col.options}
+                         .options=${options}
+                         @change=${this._changeHandler}>
+          ${col.label}
+        </filter-sort-ctrl>
+      </th>
+    `;
   }
 
 
@@ -195,16 +196,11 @@ export class FilterSortTable extends LitElement {
     // console.log('row:', row)
     // console.log('id:', this.id)
     // console.log('index:', index)
-    const _type = typeof col.ctrl !== 'undefined'
-      ? col.ctrl.type
-      : (typeof col.type === 'string')
-        ? col.type
-        : 'text';
     const id = this.id + '--' + index;
-    const colID = this.id + '--' + col.prop
-    let value : TemplateResult|string = (_type === 'date' || _type === 'datetime')
-      ? html`<short-date timestamp="${row[col.prop]}"></short-date>`
-      : row[col.prop].toString();
+    const colID = this.id + '--' + col.field
+    let value : TemplateResult|string = (col.type === 'date' || col.type === 'datetime')
+      ? html`<short-date timestamp="${row[col.field]}"></short-date>`
+      : row[col.field].toString();
 
     value = (typeof col.urlField === 'string' && col.urlField !== '' && typeof row[col.urlField] === 'string')
       ? html`<a href="${row[col.urlField]}" @click=${ifDefined(this.linkHandler)}>${value}</a>`
@@ -225,9 +221,9 @@ export class FilterSortTable extends LitElement {
   private _renderRow = (row : IObjScalarX) : TemplateResult => {
     return html`
       <tr>
-            ${this._cols.map(
-              (col : IHeadConfig, index: number) => this._renderCell(col, row, index)
-            )}
+        ${this.cols.map(
+          (col : IHeadConfig, index: number) => this._renderCell(col, row, index)
+        )}
       </tr>
     `;
   }
@@ -250,7 +246,7 @@ export class FilterSortTable extends LitElement {
       <table>
         <thead>
           <tr>
-            ${this._cols.map(
+            ${this.cols.map(
               (col : IHeadConfig) => this._renderColHead(col)
             )}
           </tr>

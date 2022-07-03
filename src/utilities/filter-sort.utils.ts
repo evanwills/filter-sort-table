@@ -44,7 +44,8 @@ export const incIgnoreExc = (
   handler : FEventHandler,
   childID: number|undefined = undefined,
   inc: string = 'Include',
-  exc: string = 'Exclude'
+  exc: string = 'Exclude',
+  tabIndex: number|undefined = undefined,
 ) : TemplateResult  => {
   // console.group('_incIgnoreExc()')
   // console.log('id:', id)
@@ -66,6 +67,7 @@ export const incIgnoreExc = (
                value="0"
                data-type="${_dataType}"
                data-child-id="${ifDefined(childID)}"
+               tabindex="${ifDefined(tabIndex)}"
               ?checked=${!isInt(value) || value === 0}
               @change=${handler} />
         <label for="${id}__0" class="radio-list__label radio-list__label--short">
@@ -80,6 +82,7 @@ export const incIgnoreExc = (
                value="1"
                data-type="${_dataType}"
                data-child-id="${ifDefined(childID)}"
+               tabindex="${ifDefined(tabIndex)}"
               ?checked=${value > 0}
               @change=${handler} />
         <label for="${id}__1" class="radio-list__label radio-list__label--short">
@@ -94,6 +97,7 @@ export const incIgnoreExc = (
                value="-1"
                data-type="${_dataType}"
                data-child-id="${ifDefined(childID)}"
+               tabindex="${ifDefined(tabIndex)}"
               ?checked=${value < 0}
               @change=${handler} />
         <label for="${id}__-1" class="radio-list__label radio-list__label--short">
@@ -118,13 +122,14 @@ export const getOption = (
   filters: Array<IListCtrlOptionItem>,
   handler : FEventHandler,
   inc: string = 'Include',
-  exc: string = 'Exclude'
+  exc: string = 'Exclude',
+  tabIndex : number | undefined = undefined
 ) : TemplateResult => {
   const val = getOptMode(option.id, filters);
   return html`
     <li class="option-list__item">
       <span class="option-list__label">${option.name}:</span>
-      ${incIgnoreExc(id + '__' + option.id , val, handler, option.id, inc, exc)}
+      ${incIgnoreExc(id + '__' + option.id , val, handler, option.id, inc, exc, tabIndex)}
     </li>
   `
 }
@@ -135,11 +140,12 @@ export const getOptions = (
   filteredOptions: Array<IListCtrlOptionItem>,
   handler: FEventHandler,
   inc: string = 'Include',
-  exc: string = 'Exclude'
+  exc: string = 'Exclude',
+  tabIndex : number | undefined = undefined
 ) : TemplateResult => {
   return html`
     <ul class="option-list">
-      ${options.map((option : IDbEnum) => getOption(id, option, filteredOptions, handler, inc, exc))}
+      ${options.map((option : IDbEnum) => getOption(id, option, filteredOptions, handler, inc, exc, tabIndex))}
     </ul>
   `;
 }
@@ -192,7 +198,8 @@ export const helpTxt = () : TemplateResult => {
 }
 
 export const getInput = (
-  id: string, label: string, value : string|number, field: string, data: IFilterSortCtrl, handler: FEventHandler
+  id: string, label: string, value : string|number, field: string, data: IFilterSortCtrl, handler: FEventHandler,
+  tabIndex : number | undefined = undefined
 ) : TemplateResult => {
   const _id = id + '__' + field;
   let _type : string = data.dataType;
@@ -230,7 +237,7 @@ export const getInput = (
       break;
 
     case 'bool':
-      _special = incIgnoreExc(_id, _value as number, handler);
+      _special = incIgnoreExc(_id, _value as number, handler, undefined, 'Include', 'Exclude', tabIndex);
       break;
 
     case 'option':
@@ -239,7 +246,10 @@ export const getInput = (
         _id,
         data.options as Array<IDbEnum>,
         data.filteredOptions,
-        handler
+        handler,
+        'Include',
+        'Exclude',
+        tabIndex
       );
       break;
   }
@@ -254,6 +264,7 @@ export const getInput = (
                       type="${_type}"
                       value="${_value}"
                       data-type="${field}"
+                      tabindex="${ifDefined(tabIndex)}"
                      @keyup=${handler}
                      @change=${handler}
                       class="filter-input" />`
@@ -270,7 +281,8 @@ export const getToggleInput = (
   trueTxt : string,
   falseTxt : string,
   handler : FEventHandler,
-  title : string|undefined = undefined) : TemplateResult => {
+  title : string|undefined = undefined,
+  tabIndex: number|undefined) : TemplateResult => {
   return html`
     <li>
       <span class="cb-btn__wrap">
@@ -278,6 +290,7 @@ export const getToggleInput = (
           type="checkbox"
           class="cb-btn__input"
           id="${id}__${name}"
+          tabindex="${ifDefined(tabIndex)}"
         ?checked="${isChecked}"
         @change=${handler}
           data-type="${name}"

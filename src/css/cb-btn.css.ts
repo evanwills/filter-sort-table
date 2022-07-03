@@ -39,6 +39,10 @@ export const cbBtn : CSSResult = css`
     background-color: var(--text-colour);
     color: var(--bg-colour);
   }
+  .cb-btn__input:focus + .cb-btn__label {
+    outline: #44f solid 0.15rem;
+    outline-offset: 0.1rem;
+  }
   .cb-btn__input:checked + .cb-btn__label::before {
     background-color: var(--bg-colour);
     border-color: var(--bg-colour);

@@ -1,6 +1,6 @@
 import { html, LitElement, TemplateResult, CSSResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-// import { ifDefined } from 'lit/directives/if-defined.js';
+import { ifDefined } from 'lit/directives/if-defined.js';
 
 import { UBoolState, IDbEnum, IListCtrlItem, IListCtrlOptionItem } from './types/Igeneral';
 
@@ -145,6 +145,12 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
   sortByValue : boolean = false;
 
   /**
+   * Whether or not this filter is a column in the table.
+   */
+  @property({ type: Boolean, reflect: true })
+  isColumn : boolean = false;
+
+  /**
    * Whether or not initialiasation code still needs to be executed
    */
   @state()
@@ -220,13 +226,14 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
   private _handler(e : Event) : void {
     const input = e.target as HTMLInputElement;
     let ok = false;
-    console.group('_handler()')
-    console.log('this:', this);
-    console.log('this.dataType:', this.dataType);
-    console.log('input:', input);
-    console.log('input.value:', input.value);
-    console.log('input.dataset.type:', input.dataset.type);
     let val = 0;
+    this.dataset.subtype2 = '';
+    // console.group('_handler()')
+    // console.log('this:', this);
+    // console.log('this.dataType:', this.dataType);
+    // console.log('input:', input);
+    // console.log('input.value:', input.value);
+    // console.log('input.dataset.type:', input.dataset.type);
 
     switch (input.dataset.type) {
       case 'filter':
@@ -319,20 +326,32 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
         this.dataType = (this.dataType === 'date')
           ? 'datetime'
           : 'date';
+          break;
+
+      case 'toggle-is-column':
+        this.isColumn = !this.isColumn;
+        this.dataset.subtype2 = 'isCol';
+        if (!this.isColumn) {
+          this.expanded = false;
+        }
+        ok = true;
+        break;
     }
 
     if (ok === true) {
+      // console.log('dispatch event')
       this.dispatchEvent(
         new Event('change', { bubbles: true, composed: true })
       )
     }
-    console.log('this:', this)
-    console.log('this.dataset:', this.dataset)
-    console.log('this.value:', this.value);
-    console.groupEnd();
+    // console.log('this:', this)
+    // console.log('this.dataset:', this.dataset)
+    // console.log('this.value:', this.value);
+    // console.groupEnd();
   }
 
   private _renderUI(id : string) : TemplateResult {
+    const tabInd = this._getTabInd();
     let helpBlock : TemplateResult|string = '';
     let helpClass : string = '';
     let decClass = '';
@@ -365,10 +384,10 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
 
     const fields : Array<TemplateResult> = (allowMinMax === true && this.showMinMax)
       ? [
-          getInput(id, 'Minimum', this.min, 'min', this, this._handler),
-          getInput(id, 'Maximum', this.max, 'max', this, this._handler)
+          getInput(id, 'Minimum', this.min, 'min', this, this._handler, tabInd),
+          getInput(id, 'Maximum', this.max, 'max', this, this._handler, tabInd)
         ]
-      : [getInput(id, 'Filter by', 'auto', 'filter', this, this._handler)];
+      : [getInput(id, 'Filter by', 'auto', 'filter', this, this._handler, tabInd)];
 
     if (toggleMinMax) {
       fields.push(
@@ -378,7 +397,9 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
           this.showMinMax,
           'Filter on Min and/or Max',
           'Filter on single value',
-          this._handler
+          this._handler,
+          undefined,
+          tabInd
         )
       );
     }
@@ -390,14 +411,31 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
           (this.dataType === 'datetime'),
           'Filter on full date/time',
           'Filter on short date',
-          this._handler
+          this._handler,
+          undefined,
+          tabInd
         )
       );
     }
+    // console.group('_renderUI()')
+    // console.log('this:', this)
+    // console.groupEnd()
     // if (this.dataType === 'text') {
     //   helpClass = ' fields--help';
     //   helpBlock = helpTxt();
     // }
+    fields.push(
+      getToggleInput(
+        id,
+        'toggle-is-column',
+        this.isColumn,
+        'Show as column',
+        'Hide column',
+        this._handler,
+        undefined,
+        tabInd
+      )
+    );
 
     return html`
       <h3 id="${id}--grp-label">Filter and sort: ${this.colName}</h3>
@@ -408,15 +446,23 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
         ${helpBlock}
         <button class="sort-btn ascending${ascClass}"
                 data-type="up"
+                tabindex="${ifDefined(tabInd)}"
               @click=${this._handler}>
           <span class="sr-only">${ascLabel}</span>
         </button>
         <button class="sort-btn decending${decClass}"
                 data-type="down"
+                tabindex="${ifDefined(tabInd)}"
               @click=${this._handler}>
           <span class="sr-only">${decLabel}</span>
         </button>
       </div>`;
+  }
+
+  private _getTabInd() : number | undefined {
+    return (this.expanded === true)
+      ? undefined
+      : -1;
   }
 
 
@@ -442,6 +488,11 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
 
     const ui = this._renderUI(id)
 
+    const tabIndex = (this.expanded === false)
+      ? -1
+      : undefined
+
+
 
     // console.group('render()')
     // console.log('this:', this)
@@ -459,10 +510,10 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
             </button>
           </th>
           <div class="wrap wrap--${state}" aria-hidden="${!this.expanded}">
-            <button class="btn-close" @click=${this._toggleExpanded}>${btnTxt}</button>
+            <button class="btn-close" @click=${this._toggleExpanded} tabindex="${ifDefined(this._getTabInd())}">${btnTxt}</button>
             ${ui}
           </div>
-          <button class="bg-close bg-close--${state}" @click=${this._toggleExpanded}>${btnTxt}</button>
+          <button class="bg-close bg-close--${state}" @click=${this._toggleExpanded} aria-hidden="${!this.expanded}" tabindex="${ifDefined(this._getTabInd())}">${btnTxt}</button>
         `
       : ui
   }

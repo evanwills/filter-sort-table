@@ -70,6 +70,11 @@ export const radioList = (minWidth: number = 35) : CSSResult => {
       transition: color var(--ease) var(--timing) background-color var(--ease) var(--timing);
       width: calc(100% - .5rem);
     }
+
+    .radio-list__input:focus + .radio-list__label {
+      outline: #44f solid 0.15rem;
+      outline-offset: -0.2rem;
+    }
     .radio-list__label--short {
       padding: 0.3rem 2.5em;
       width: auto;
