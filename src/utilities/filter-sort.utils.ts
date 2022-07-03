@@ -2,7 +2,7 @@ import { html, TemplateResult } from 'lit';
 // import { customElement, property, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 
-import { UBoolState, FEventHandler, IDbEnum, IListCtrlOptionItem, IListCtrlItem, UDataType } from '../types/Igeneral';
+import { UBoolState, FEventHandler, IDbEnum, IListCtrlOptionItem, IListCtrlItem, UDataType, UTabIndex } from '../types/Igeneral';
 
 import { isInt, isNumber } from './validation';
 // import { isoStrToTime } from './sanitise';
@@ -38,6 +38,18 @@ export const parseOptStr = (input : string) : Array<IDbEnum> => {
   return output;
 }
 
+/**
+ *
+ * @param id       ID of filter with boolean value
+ * @param value    Current state of boolean value
+ * @param handler  Event handler changes to boolean value
+ * @param childID  (for option fields) The ID of the option being
+ *                 toggled
+ * @param inc      Text for include/true state
+ * @param exc      Text for exclude/false state
+ * @param tabIndex
+ * @returns
+ */
 export const incIgnoreExc = (
   id: string,
   value: number,
@@ -45,7 +57,7 @@ export const incIgnoreExc = (
   childID: number|undefined = undefined,
   inc: string = 'Include',
   exc: string = 'Exclude',
-  tabIndex: number|undefined = undefined,
+  tabIndex: UTabIndex = undefined,
 ) : TemplateResult  => {
   // console.group('_incIgnoreExc()')
   // console.log('id:', id)
@@ -116,6 +128,16 @@ export const getOptMode = (
     : 0
 }
 
+export const hasFilteredOpts = (options : Array<IListCtrlOptionItem>) : bool => {
+  for (let a = 0; a < options.length; a += 1) {
+    if (options[a].mode !== 0) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export const getOption = (
   id: string,
   option: IDbEnum,
@@ -123,7 +145,7 @@ export const getOption = (
   handler : FEventHandler,
   inc: string = 'Include',
   exc: string = 'Exclude',
-  tabIndex : number | undefined = undefined
+  tabIndex : UTabIndex = undefined
 ) : TemplateResult => {
   const val = getOptMode(option.id, filters);
   return html`
@@ -141,7 +163,7 @@ export const getOptions = (
   handler: FEventHandler,
   inc: string = 'Include',
   exc: string = 'Exclude',
-  tabIndex : number | undefined = undefined
+  tabIndex : UTabIndex = undefined
 ) : TemplateResult => {
   return html`
     <ul class="option-list">
@@ -199,7 +221,7 @@ export const helpTxt = () : TemplateResult => {
 
 export const getInput = (
   id: string, label: string, value : string|number, field: string, data: IFilterSortCtrl, handler: FEventHandler,
-  tabIndex : number | undefined = undefined
+  tabIndex : UTabIndex = undefined
 ) : TemplateResult => {
   const _id = id + '__' + field;
   let _type : string = data.dataType;
@@ -520,4 +542,51 @@ export const getDataType = (input : string) : UDataType => {
       console.error('Could not match data type: "' + input + '"');
       return 'text';
   }
+}
+
+/**
+ * Update the sort order for any fields affected by the lates sort
+ * order change
+ *
+ * @param filters List of filters
+ * @param field   Name of field that has changed
+ * @param order   New order for field
+ *
+ * @returns Updated sort order & priority for fields.
+ */
+export const setSortOrder = (
+  filters : Array<IListCtrlItem>, field : string, order : UBoolState
+) : Array<IListCtrlItem> => {
+  let c = 0;
+  let oldPriority = -1;
+  return filters.map((item : IListCtrlItem) : IListCtrlItem => {
+    // Reset the priority for the for the field being changed.
+    if (item.field === field) {
+      oldPriority = item.orderPriority;
+
+      return {
+        ...item,
+        order: order,
+        orderPriority: -1
+      }
+    } else {
+      if (item.order !== 0) {
+        // count the number of fields being sorted
+        c += 1;
+      }
+      return item;
+    }
+  }).map((item: IListCtrlItem) : IListCtrlItem => {
+    if (item.field === field && order !== 0) {
+      // Make the changed field the highest priority
+      item.orderPriority = c;
+    } else if (oldPriority > -1 && item.orderPriority > oldPriority) {
+      // decrement the priority of fields that were being sorted
+      return {
+        ...item,
+        orderPriority: item.orderPriority - 1
+      }
+    }
+    return item;
+  });
 }

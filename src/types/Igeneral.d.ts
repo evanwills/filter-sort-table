@@ -8,6 +8,16 @@ import { IAction, IBaseStateItem } from './Iredux-extra';
 export type UScalar = string | number | boolean;
 export type UScalarA = string | number | boolean | Array<UScalar>;
 export type UScalarX = string | number | boolean | IObjScalarX | Array<string> | Array<any>;
+/**
+ * For accessibility, focusable items that are not visible, they
+ * should not be accessible by tabbing. When a focusable item has
+ * a tab index of -1, it cannot be accessed via keyboard navigation.
+ *
+ * If a focusable item should be accessible via keyboard, it should
+ * inherit the default tabindex set via the DOM so we don't to have
+ * anything set.
+ */
+export type UTabIndex = -1 | undefined;
 
 export interface IKeyValueStr {
   key: string,
@@ -189,7 +199,14 @@ export interface  IListCtrlItem {
    * for fixed option fields, whether or not to order option label
    * or value
    */
-  orderByValue: boolean
+  orderByValue: boolean,
+  /**
+   * The order in which sorting occurs
+   * The lower the priority the earlier it gets sorted
+   *
+   * -1 = no sorting
+   */
+  orderPriority: number
 }
 
 

@@ -2,7 +2,7 @@ import { html, LitElement, TemplateResult, CSSResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 
-import { UBoolState, IDbEnum, IListCtrlItem, IListCtrlOptionItem } from './types/Igeneral';
+import { UBoolState, IDbEnum, IListCtrlItem, IListCtrlOptionItem, UTabIndex } from './types/Igeneral';
 
 import { style } from './css/filter-sort-ctrl.css';
 
@@ -149,6 +149,12 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
    */
   @property({ type: Boolean, reflect: true })
   isColumn : boolean = false;
+
+  /**
+   * Whether or not user can toggle column visibility
+   */
+  @property({ type: Boolean })
+  toggleCol : boolean = false;
 
   /**
    * Whether or not initialiasation code still needs to be executed
@@ -331,7 +337,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
       case 'toggle-is-column':
         this.isColumn = !this.isColumn;
         this.dataset.subtype2 = 'isCol';
-        if (!this.isColumn) {
+        if (this.toggleCol && !this.isColumn) {
           this.expanded = false;
         }
         ok = true;
@@ -424,6 +430,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
     //   helpClass = ' fields--help';
     //   helpBlock = helpTxt();
     // }
+    if (this.toggleCol)
     fields.push(
       getToggleInput(
         id,
@@ -459,7 +466,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
       </div>`;
   }
 
-  private _getTabInd() : number | undefined {
+  private _getTabInd() : UTabIndex {
     return (this.expanded === true)
       ? undefined
       : -1;
@@ -487,12 +494,6 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
       </span>`;
 
     const ui = this._renderUI(id)
-
-    const tabIndex = (this.expanded === false)
-      ? -1
-      : undefined
-
-
 
     // console.group('render()')
     // console.log('this:', this)

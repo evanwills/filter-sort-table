@@ -10,6 +10,7 @@ import { style } from './css/filter-sort-table.css';
 import './filter-sort-ctrl';
 import './short-date';
 import { FilterSortCtrl } from './filter-sort-ctrl';
+import { hasFilteredOpts } from './utilities/filter-sort.utils';
 // import { getBoolState } from './utilities/general.utils';
 // import { filterAndSort, filterSortSort } from './utilities/filter-sort.utils';
 // import { getNum } from './utilities/sanitise';
@@ -38,6 +39,12 @@ export class FilterSortTable extends LitElement {
   doInit : boolean = true;
 
   /**
+   * Whether or not user can toggle column visibility
+   */
+  @property({ type: Boolean })
+  toggleCol : boolean = false;
+
+  /**
    * If links are to be handled in a special way this allows for a
    * custom link click event handler to be used on links
    */
@@ -60,6 +67,9 @@ export class FilterSortTable extends LitElement {
   // ------------------------------------------------------
   // START: Initialisation method
 
+  /**
+   * Do basic initialisation
+   */
   private _doInit() {
     this.doInit = false;
     // console.group('_doInit()')
@@ -72,6 +82,9 @@ export class FilterSortTable extends LitElement {
     // console.groupEnd()
   }
 
+  /**
+   *
+   */
   private _setCols() {
     // console.group('_setCols()')
     // console.group('_setCols() - before')
@@ -81,6 +94,7 @@ export class FilterSortTable extends LitElement {
     // console.log('this.nonCols:', this.nonCols)
     // console.groupEnd();
 
+    // Make a list of all the table columns
     this.cols = this.headConfig.filter(
       (col : IHeadConfig) => col.isColumn
       // (col : IHeadConfig) => {
@@ -89,8 +103,17 @@ export class FilterSortTable extends LitElement {
       //   return col.isColumn
       // }
     );
+
+    // Make a list of all the fields that are filterable but should
+    // not be rendered as columns
     this.nonCols = this.headConfig.filter(
-      (col : IHeadConfig) => !col.isColumn
+      (col : IHeadConfig) => (col.isFilter && !col.isColumn)
+    );
+
+    this.listCtrl = this.headConfig.filter(
+      (col : IHeadConfig) => {
+        return (col.filter !== '' || col.min !== 0 || col.max !== 0 || col.bool !== 0 || col.filterOnEmpty || col.order !== 0 || hasFilteredOpts(col.options))
+      }
     );
     // console.group('_setCols() - after')
     // console.log('this.cols.length:', this.cols.length)
@@ -106,7 +129,7 @@ export class FilterSortTable extends LitElement {
   // START: Private event handler method
 
 
-  private _changeHandler(event: Event) : void {
+  private _handler(event: Event) : void {
     const filter = event.target as FilterSortCtrl;
 
     this.headConfig = this.headConfig.map((field: IHeadConfig) : IHeadConfig => {
@@ -134,7 +157,9 @@ export class FilterSortTable extends LitElement {
             break;
           case 'isCol':
             // console.log('output.isColumn (before):', output.isColumn)
-            output.isColumn = filter.isColumn;
+            if (this.toggleCol) {
+              output.isColumn = filter.isColumn;
+            }
             // console.log('output.isColumn (after):', output.isColumn)
             break;
         }
@@ -144,6 +169,7 @@ export class FilterSortTable extends LitElement {
         return field;
       }
     })
+
     this._setCols();
 
     // this.listCtrl = this.headConfig.filter(item => {
@@ -180,9 +206,10 @@ export class FilterSortTable extends LitElement {
                           bool="${col.bool}"
                           order="${col.order}"
                           iscolumn="${col.isColumn}"
+                         ?togglecol="${this.toggleCol}"
                          .statedata=${col.options}
                          .options=${options}
-                         @change=${this._changeHandler}>
+                         @change=${this._handler}>
           ${col.label}
         </filter-sort-ctrl>
       </th>
