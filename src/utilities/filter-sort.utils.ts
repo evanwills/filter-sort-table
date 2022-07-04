@@ -10,6 +10,11 @@ import { getBoolState } from './general.utils';
 import { IFilterSortCtrl } from '../types/IFilterSortCtrl';
 import { UScalarX } from '../types/Igeneral';
 
+/**
+ * This file contains a list of pure utility functions to help filter
+ * sort controls
+ */
+
 
 /**
  * Parse a string for options that can be used in an option filter
@@ -39,6 +44,7 @@ export const parseOptStr = (input : string) : Array<IDbEnum> => {
 }
 
 /**
+ * Render an ignore/include/execlude radio input group
  *
  * @param id       ID of filter with boolean value
  * @param value    Current state of boolean value
@@ -47,7 +53,8 @@ export const parseOptStr = (input : string) : Array<IDbEnum> => {
  *                 toggled
  * @param inc      Text for include/true state
  * @param exc      Text for exclude/false state
- * @param tabIndex
+ * @param tabIndex Tab index (if appropriate)
+ *
  * @returns
  */
 export const incIgnoreExc = (
@@ -119,6 +126,14 @@ export const incIgnoreExc = (
     </ul>`;
 }
 
+/**
+ * Get current option mode for a single option
+ *
+ * @param id      ID of option to get value from
+ * @param filters List of all filter options for a single field
+ *
+ * @returns Current state for single
+ */
 export const getOptMode = (
   id: number, filters: Array<IListCtrlOptionItem>
 ) : UBoolState => {
@@ -128,7 +143,14 @@ export const getOptMode = (
     : 0
 }
 
-export const hasFilteredOpts = (options : Array<IListCtrlOptionItem>) : bool => {
+/**
+ * Test whether a filter has any options set
+ *
+ * @param options List of option items for a filter.
+ *
+ * @returns TRUE if one or more options are set to either include or exclude
+ */
+export const hasFilteredOpts = (options : Array<IListCtrlOptionItem>) : boolean => {
   for (let a = 0; a < options.length; a += 1) {
     if (options[a].mode !== 0) {
       return true;
@@ -138,6 +160,19 @@ export const hasFilteredOpts = (options : Array<IListCtrlOptionItem>) : bool => 
   return false;
 }
 
+/**
+ * Get a single option control for an option filter
+ *
+ * @param id       ID of wrapper
+ * @param option   Option to be controlled
+ * @param filters  List of all filter options for a single field
+ * @param handler  Event handler for toggle
+ * @param inc      Include text
+ * @param exc      Exclude text
+ * @param tabIndex Tab index (if appropriate)
+ *
+ * @returns A list item with option toggle
+ */
 export const getOption = (
   id: string,
   option: IDbEnum,
@@ -148,14 +183,30 @@ export const getOption = (
   tabIndex : UTabIndex = undefined
 ) : TemplateResult => {
   const val = getOptMode(option.id, filters);
+  const _id = id + '__' + option.id
   return html`
-    <li class="option-list__item">
-      <span class="option-list__label">${option.name}:</span>
-      ${incIgnoreExc(id + '__' + option.id , val, handler, option.id, inc, exc, tabIndex)}
+    <li class="option-list__item" role="radiogroup" aria-labelledby="${_id}--label">
+      <span class="option-list__label" id="${_id}--label">${option.name}:</span>
+      ${incIgnoreExc(_id , val, handler, option.id, inc, exc, tabIndex)}
     </li>
   `
 }
 
+/**
+ * Get list of options for field containing values from a fixed list
+ * of options
+ *
+ * @param id              ID of wrapper
+ * @param options         Option to be controlled
+ * @param filteredOptions List of all filter options for a single
+ *                        field
+ * @param handler         Event handler for toggle
+ * @param inc             Include text
+ * @param exc             Exclude text
+ * @param tabIndex        Tab index (if appropriate)
+ *
+ * @returns A list of option toggles
+ */
 export const getOptions = (
   id: string,
   options: Array<IDbEnum>,
@@ -172,7 +223,15 @@ export const getOptions = (
   `;
 }
 
-
+/**
+ * Update list of option for a single field based on values set by
+ * a recently changed input field
+ *
+ * @param filteredOptions List of all filter options for a single field
+ * @param input           HTML input field that was just changed
+ *
+ * @returns Update list of all filter options for a single field
+ */
 export const getUpdatedFilterOpt = (
   filteredOptions : Array<IListCtrlOptionItem>,
   input : HTMLInputElement
@@ -188,6 +247,20 @@ export const getUpdatedFilterOpt = (
   });
 }
 
+/**
+ * Stringify toggled options for a fixed option field
+ *
+ * each option is comma separated
+ * Individual options have an ID & value separated by a colon
+ *
+ * e.g. "0:1,3:-1,4:-1,7:1"
+ *
+ * @param filteredOptions list of non-ignore options for a single
+ *                        filter field
+ *
+ * @returns String representation of toggled options for a single
+ *          field
+ */
 export const getOptStr = (filteredOptions : Array<IListCtrlOptionItem>) : string => {
   let output = '';
   let sep = '';
@@ -219,6 +292,19 @@ export const helpTxt = () : TemplateResult => {
   `;
 }
 
+/**
+ * Get HTML for a single filter control
+ *
+ * @param id       ID of wrapper
+ * @param label    Label for input
+ * @param value    Current value for input
+ * @param field    Field input applies to
+ * @param data     All the filter control data for the field
+ * @param handler  Event handler for toggle
+ * @param tabIndex Tab index (if appropriate)
+ *
+ * @returns HTML for input field
+ */
 export const getInput = (
   id: string, label: string, value : string|number, field: string, data: IFilterSortCtrl, handler: FEventHandler,
   tabIndex : UTabIndex = undefined
@@ -296,6 +382,20 @@ export const getInput = (
   `;
 }
 
+/**
+ * Get HTML for a checkbox field & label
+ *
+ * @param id        ID of wrapper
+ * @param name      Field name
+ * @param isChecked Whether the field is currently checked or not
+ * @param trueTxt   Label text for checked state
+ * @param falseTxt  Label text for unchecked state
+ * @param handler   Event handler for checkbox change
+ * @param title     Title attribute for checkbox field
+ * @param tabIndex  Tab index (if appropriate)
+ *
+ * @returns HTML for a checkbox field
+ */
 export const getToggleInput = (
   id : string,
   name : string,
@@ -327,7 +427,14 @@ export const getToggleInput = (
   `;
 }
 
-
+/**
+ * Array.filter callback function for filtering data based on fixed option
+ *
+ * @param options List of options for a field
+ * @param id      ID of option listed for row
+ *
+ * @returns TRUE if option was not filtered out. FALSE otherwise
+ */
 const filterOnOptions = (options : Array<IListCtrlOptionItem>, id: number) : boolean => {
   const inc : number[] = [];
   const exc : number[] = [];
@@ -341,11 +448,12 @@ const filterOnOptions = (options : Array<IListCtrlOptionItem>, id: number) : boo
   }
 
   if ((inc.length > 0 && inc.indexOf(id) === -1) ||
-      (exc.length > 0 && inc.indexOf(id) > -1)
+      (exc.length > 0 && exc.indexOf(id) > -1)
   ) {
     return false;
+  } else {
+    return true;
   }
-  else return true;
 }
 
 /**
@@ -372,7 +480,7 @@ const filterSortFilter = (item : UScalarX, listCtrl: Array<IListCtrlItem>) : boo
 
     switch (ctl.type) {
       case 'text':
-        if (_val.toLowerCase().indexOf(ctl.filter.toLowerCase()) === -1) {
+        if (_val.toLowerCase().indexOf((ctl.filter as string).toLowerCase()) === -1) {
           return false;
         }
         break;
@@ -390,7 +498,9 @@ const filterSortFilter = (item : UScalarX, listCtrl: Array<IListCtrlItem>) : boo
             console.groupEnd(); console.groupEnd();
             return false;
           }
-        } else if (_val !== parseFloat(ctl.filter)) {
+        } else if ((typeof ctl.filter === 'number' &&  _val !== ctl.filter) ||
+          (typeof ctl.filter === 'string' && _val !== parseFloat(ctl.filter))
+        ) {
           return false;
         }
         break;
@@ -510,7 +620,14 @@ export const filterAndSort = (items : Array<UScalarX>, listCtrl : Array<IListCtr
   );
 }
 
-export const getFilterData = (listCtrl : Array<IListCtrlItem>) => (field: string) : IListCtrlItem|null => {
+/**
+ * Get all filter control data for a single field
+ *
+ * @param listCtrl List of filter controls
+ *
+ * @returns Single control if one could be matched. NULL otherwise
+ */
+export const getFilterData = (listCtrl : Array<IListCtrlItem>) => (field: string) : IListCtrlItem|false => {
   // console.group(getFilterData)
   // console.log('field:', field)
   // console.log('listCtrl:', listCtrl)
@@ -521,10 +638,16 @@ export const getFilterData = (listCtrl : Array<IListCtrlItem>) => (field: string
   // console.groupEnd()
   return (tmp.length === 1)
     ? tmp[0]
-    : null;
+    : false;
 }
 
-
+/**
+ * Ensure data type is valid
+ *
+ * @param input Data type to be validated
+ *
+ * @returns Valid data type
+ */
 export const getDataType = (input : string) : UDataType => {
   const _input = input.toLowerCase();
 
@@ -557,16 +680,40 @@ export const getDataType = (input : string) : UDataType => {
 export const setSortOrder = (
   filters : Array<IListCtrlItem>, field : string, order : UBoolState
 ) : Array<IListCtrlItem> => {
+  /**
+   * Number of fields currently being sorted on.
+   */
   let c = 0;
+
+  /**
+   * Previous priority for field whose sort mode has most recently
+   * changed
+   *
+   * Used to test whether more recently sorted fields should have
+   * their priority decremented to reflect the change to the current
+   * field.
+   */
   let oldPriority = -1;
+
+  // Run through the list of filters twice
+  // First to work out how many fields are being sorted on and
+  // update/set the sort mode for the most recently updated sort
+  // field.
+  // Then to update the sort priority for previously sorted fields
+  // (where appropriate) and to set the most recently updated field
+  // to the highest priority.
   return filters.map((item : IListCtrlItem) : IListCtrlItem => {
-    // Reset the priority for the for the field being changed.
     if (item.field === field) {
+      // Record the current priority so higher priority fields can
+      // be decrmented
       oldPriority = item.orderPriority;
 
       return {
         ...item,
+        // Update the sort mode for this field to reflect user
+        // interaction
         order: order,
+        // Reset the priority for the for the field being changed.
         orderPriority: -1
       }
     } else {
@@ -574,6 +721,7 @@ export const setSortOrder = (
         // count the number of fields being sorted
         c += 1;
       }
+
       return item;
     }
   }).map((item: IListCtrlItem) : IListCtrlItem => {
@@ -581,12 +729,14 @@ export const setSortOrder = (
       // Make the changed field the highest priority
       item.orderPriority = c;
     } else if (oldPriority > -1 && item.orderPriority > oldPriority) {
-      // decrement the priority of fields that were being sorted
       return {
         ...item,
+        // decrement the priority of fields that were being sorted
+        // after the most recently updated field
         orderPriority: item.orderPriority - 1
       }
     }
+
     return item;
   });
 }
