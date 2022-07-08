@@ -877,3 +877,20 @@ export const setSortOrder = (
     return item;
   });
 }
+
+export const headConfigToListCtrl = (item: IHeadConfig) : IListCtrlItem => {
+  return {
+    skip: item.skip,
+    field: item.field,
+    type: item.type,
+    filterOnEmpty: item.filterOnEmpty,
+    filter: item.filter,
+    min: item.min,
+    max: item.max,
+    bool: item.bool,
+    options: item.options,
+    order: item.order,
+    orderByValue: item.orderByValue,
+    orderPriority: item.orderPriority
+  }
+}

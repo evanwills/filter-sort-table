@@ -4,11 +4,11 @@ import { ifDefined } from 'lit/directives/if-defined.js';
 import { repeat } from 'lit/directives/repeat.js'
 
 import { IHeadConfig } from './types/header-config'
-import { FEventHandler, IDbEnum, IObjArrStrSimple, IObjScalarX, UScalar } from './types/Igeneral';
+import { FEventHandler, IDbEnum, IListCtrlItem, IObjArrStrSimple, IObjScalarX, UScalar } from './types/Igeneral';
 
 import { style } from './css/filter-sort-table.css';
 
-import { filterAndSort, getDataType, setSortOrder, skipFilter } from './utilities/filter-sort.utils';
+import { filterAndSort, getDataType, headConfigToListCtrl, setSortOrder, skipFilter } from './utilities/filter-sort.utils';
 import { isInt, isNumber } from './utilities/validation';
 import { isTrue } from './utilities/sanitise';
 
@@ -17,6 +17,7 @@ import { ShortDate } from './short-date';
 
 import './filter-sort-ctrl';
 import './short-date';
+import { getBoolState } from './utilities/general.utils';
 
 /**
  * An example element.
@@ -34,6 +35,9 @@ export class FilterSortTable extends LitElement {
 
   @property({ type: Boolean })
   html : boolean = false;
+
+  @property({ type: String, reflect: true })
+  lastFiltered: string = '';
 
   /**
    * Whether or not to do intialisation stuff
@@ -180,6 +184,7 @@ export class FilterSortTable extends LitElement {
         console.log('output:', output);
         output.skip = skipFilter(output);
         console.log('output:', output);
+        this.lastFiltered = filter.colName;
 
         return output;
       } else {
@@ -192,11 +197,9 @@ export class FilterSortTable extends LitElement {
       this.headConfig = setSortOrder(this.headConfig, filter.colName, filter.order);
     }
 
-    // this.listCtrl = this.headConfig.filter(item => {
-
-    // }).map((item) : IListCtrlItem => {
-
-    // })
+    this.dispatchEvent(
+      new Event('change', { bubbles: true, composed: true })
+    );
     console.log('this:', this);
     console.groupEnd();
   }
@@ -226,27 +229,39 @@ export class FilterSortTable extends LitElement {
           ? col.innerText.trim()
           : col.innerHTML,
         isColumn: true,
-        isFilter: (typeof col.dataset.datatype === 'string'  && col.dataset.datatype.trim() !== ''),
-        type: (typeof col.dataset.datatype === 'string' && col.dataset.datatype !== '')
-          ? getDataType(col.dataset.datatype)
+        isFilter: (typeof col.dataset.type === 'string'  && col.dataset.type.trim() !== ''),
+        type: (typeof col.dataset.type === 'string' && col.dataset.type.trim() !== '')
+          ? getDataType(col.dataset.type)
           : 'text',
-        field: (typeof col.dataset.colname === 'string')
-          ? col.dataset.colname
+        field: (typeof col.dataset.field === 'string')
+          ? col.dataset.field
           : col.id,
-        filter: '',
-        min: 0,
-        max: 0,
-        bool: 0,
+        filter: (typeof col.dataset.filter === 'string')
+          ? col.dataset.filter
+          : '',
+        min: (typeof col.dataset.min === 'string' && isNumber(col.dataset.min))
+          ? parseFloat(col.dataset.min)
+          : 0,
+        max: (typeof col.dataset.max === 'string' && isNumber(col.dataset.max))
+          ? parseFloat(col.dataset.max)
+          : 0,
+        bool: (typeof col.dataset.bool === 'string' && isNumber(col.dataset.bool))
+          ? getBoolState(col.dataset.bool)
+          : 0,
         options: [],
-        order: 0,
-        orderByValue: false,
-        orderPriority: -1,
-        filterOnEmpty: false,
+        order: (typeof col.dataset.order === 'string' && isNumber(col.dataset.order))
+          ? getBoolState(col.dataset.order)
+          : 0,
+        orderByValue: (typeof col.dataset.orderByValue !== 'undefined'),
+        orderPriority: (typeof col.dataset.orderPriority === 'string' && isNumber(col.dataset.orderPriority))
+          ? parseInt(col.dataset.orderPriority)
+          : -1,
+        filterOnEmpty: (typeof col.dataset.orderPriority !== 'undefined'),
         skip: true
       }
 
-      if (tmp.type === 'option' && typeof col.dataset.enumlist === 'string' && col.dataset.enumlist !== '') {
-        const enums = col.dataset.enumlist.split(',');
+      if (tmp.type === 'option' && typeof col.dataset.optionlist === 'string' && col.dataset.optionlist !== '') {
+        const enums = col.dataset.optionlist.split(',');
         const enumList : Array<IDbEnum> = [];
         for (let b = 0; b < enums.length; b += 1) {
           const _enum = enums[b].split(':');
@@ -365,6 +380,14 @@ export class FilterSortTable extends LitElement {
   // START: Private render methods
 
 
+  /**
+   * Render a table header column header
+   *
+   * @param col Data for a single column header with (or without)
+   *            filter control
+   *
+   * @returns HTML table column header
+   */
   private _renderColHead = (col : IHeadConfig) : TemplateResult => {
     if (col.isFilter === false) {
       return html`
@@ -397,7 +420,16 @@ export class FilterSortTable extends LitElement {
     `;
   }
 
-
+  /**
+   * Render a single table cell
+   *
+   * @param col      Filter control data for column
+   * @param row      Data for whole row
+   * @param rowIndex Index of the row
+   * @param colIndex Index of the individual cell being rendered
+   *
+   * @returns A single HTML <TD> or <TH> cell
+   */
   private _renderCell = (col: IHeadConfig, row : IObjScalarX, rowIndex: number, colIndex: number) : TemplateResult => {
     // console.group('_renderCell()');
     // console.log('col:', col)
@@ -447,6 +479,32 @@ export class FilterSortTable extends LitElement {
   //  END:  private methods
   // ======================================================
   // START: Public methods
+
+
+  /**
+   * Get the List Control object for the last column to be updated
+   *
+   * @returns A list control object if any columns have been update.
+   *          FALSE otherwise
+   */
+  getLastUpdated() : IListCtrlItem|false {
+    const output = this.headConfig.filter(
+      (item: IHeadConfig) => item.field === this.lastFiltered
+    ).map(headConfigToListCtrl);
+
+    return (output.length === 1)
+      ? output[0]
+      : false;
+  }
+
+  /**
+   * Get all the list Control items for this table
+   *
+   * @returns All List Control items
+   */
+  getAllListCtrl() : Array<IListCtrlItem> {
+    return this.headConfig.map(headConfigToListCtrl);
+  }
 
   render() {
     if (this.doInit === true) {
