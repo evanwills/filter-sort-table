@@ -266,17 +266,17 @@ export const getOptStr = (filteredOptions : Array<IListCtrlOptionItem>) : string
   let output = '';
   let sep = '';
 
-  console.group('_getOptStr()')
+  // console.group('_getOptStr()')
 
   for (let a = 0; a < filteredOptions.length; a += 1) {
     if (filteredOptions[a].mode !== 0) {
       output += sep + filteredOptions[a].id + ':' + filteredOptions[a].mode;
       sep = ',';
-      console.log('output:', output);
+      // console.log('output:', output);
     }
   }
-  console.log('output:', output);
-  console.groupEnd();
+  // console.log('output:', output);
+  // console.groupEnd();
 
   return output;
 }
@@ -497,8 +497,21 @@ const filterOnOptions = (options : Array<IListCtrlOptionItem>, id: number) : boo
   }
 }
 
-const doFilter = (listCtrl: IHeadConfig) : boolean => {
-  return (listCtrl.isFilter && (
+/**
+ * Test whether or not to
+ * @param listCtrl
+ * @returns
+ */
+export const skipFilter = (listCtrl: IHeadConfig) : boolean => {
+  // console.group('skipFilter()')
+  // console.log('listCtrl.isFilter:', listCtrl.isFilter)
+  // console.log('listCtrl.filter:', listCtrl.filter, listCtrl.filter !== '')
+  // console.log('listCtrl.min:', listCtrl.min, listCtrl.min !== 0)
+  // console.log('listCtrl.max:', listCtrl.max, listCtrl.max !== 0)
+  // console.log('listCtrl.bool:', listCtrl.bool, listCtrl.bool !== 0)
+  // console.log('listCtrl.filterOnEmpty:', listCtrl.filterOnEmpty)
+  // console.groupEnd();
+  return !(listCtrl.isFilter && (
       (listCtrl.filter !== '' && listCtrl.filter !== 0) ||
       listCtrl.min !== 0 ||
       listCtrl.max !== 0 ||
@@ -523,12 +536,12 @@ const filterSortFilter = (item : UScalarX, listCtrl: Array<IHeadConfig>) : boole
   // console.log('item:', item)
 
   for (let a = 0; a < listCtrl.length; a += 1) {
-    if (!doFilter(listCtrl[a])) {
-      // console.log('listCtrl[' + a + ']:', listCtrl[a])
-      // console.log('skipping filter')
+    if (listCtrl[a].skip) {
+      // console.log('skip filter')
       // console.groupEnd();
       continue;
     }
+
     const ctl = listCtrl[a];
     let _type = typeof item[ctl.field];
 
@@ -547,7 +560,9 @@ const filterSortFilter = (item : UScalarX, listCtrl: Array<IHeadConfig>) : boole
 
     switch (ctl.type) {
       case 'text':
+        // console.log('filtered on text');
         if (_val.toLowerCase().indexOf((ctl.filter as string).toLowerCase()) === -1) {
+          // console.log('filtered out on text');
           // console.groupEnd(); console.groupEnd();
           return false;
         }
@@ -577,7 +592,7 @@ const filterSortFilter = (item : UScalarX, listCtrl: Array<IHeadConfig>) : boole
           if (ctlVal !== 0 && _val !== ctlVal) {
             // console.log('filtering on numberic value')
             // console.groupEnd(); console.groupEnd();
-              return false;
+            return false;
           }
         }
         break;
@@ -594,6 +609,7 @@ const filterSortFilter = (item : UScalarX, listCtrl: Array<IHeadConfig>) : boole
         if ((ctl.bool === 1 && _val === false)
           || (ctl.bool === -1 && _val === true)
         ) {
+          // console.log('filtered out on bool');
           // console.groupEnd(); console.groupEnd();
           return false;
         }
@@ -623,6 +639,7 @@ const filterSortFilter = (item : UScalarX, listCtrl: Array<IHeadConfig>) : boole
           );
         }
         if (filterOnOptions(ctl.options, _val as number) === false) {
+          // console.log('filtered out on option');
           // console.groupEnd(); console.groupEnd();
           return false;
         }
@@ -649,13 +666,34 @@ const filterSortSort = (items : Array<UScalarX>, listCtrl: Array<IListCtrlItem>)
     return items;
   }
 
+  // Remove any controls that are set to ignore when sorting
+  const tmpCtrl = listCtrl.filter(
+    (ctrlItem : IListCtrlItem) : boolean => {
+      return (ctrlItem.order !== 0 && ctrlItem.orderPriority > -1);
+    }
+  )
+
+  // Sort all remaining controls so the least recently set is sorted
+  // first and the most recently set is sorted last
+  tmpCtrl.sort((a : IListCtrlItem, b: IListCtrlItem) : number => {
+    if (a.orderPriority < b.orderPriority) {
+      return -1;
+    } else if (a.orderPriority > b.orderPriority) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
+
+  console.log('tmpCtrl:', tmpCtrl);
+
   // We're trying to be immutable so do a shallow clone
   // This function doesn't touch the children so a shallow
   // clone will be fine.
   const output = [...items];
 
   output.sort((a : UScalarX, b : UScalarX) => {
-    const tmp = [...listCtrl];
+    const tmp = [...tmpCtrl];
     let next = tmp.shift();
 
     while (typeof next !== 'undefined') {
@@ -711,7 +749,8 @@ const filterSortSort = (items : Array<UScalarX>, listCtrl: Array<IListCtrlItem>)
  *
  * @returns Filtered & sorted list of items
  */
-export const filterAndSort = (items : Array<UScalarX>, listCtrl : Array<IListCtrlItem>) : Array<UScalarX> => {
+export const filterAndSort = (items : Array<UScalarX>, listCtrl : Array<IHeadConfig>) : Array<UScalarX> => {
+  // console.log(items);
   return filterSortSort(
     items.filter((item : UScalarX) : boolean => filterSortFilter(item, listCtrl)),
     listCtrl
@@ -776,8 +815,8 @@ export const getDataType = (input : string) : UDataType => {
  * @returns Updated sort order & priority for fields.
  */
 export const setSortOrder = (
-  filters : Array<IListCtrlItem>, field : string, order : UBoolState
-) : Array<IListCtrlItem> => {
+  filters : Array<IHeadConfig>, field : string, order : UBoolState
+) : Array<IHeadConfig> => {
   /**
    * Number of fields currently being sorted on.
    */
@@ -800,7 +839,7 @@ export const setSortOrder = (
   // Then to update the sort priority for previously sorted fields
   // (where appropriate) and to set the most recently updated field
   // to the highest priority.
-  return filters.map((item : IListCtrlItem) : IListCtrlItem => {
+  return filters.map((item : IHeadConfig) : IHeadConfig => {
     if (item.field === field) {
       // Record the current priority so higher priority fields can
       // be decrmented
@@ -822,7 +861,7 @@ export const setSortOrder = (
 
       return item;
     }
-  }).map((item: IListCtrlItem) : IListCtrlItem => {
+  }).map((item: IHeadConfig) : IHeadConfig => {
     if (item.field === field && order !== 0) {
       // Make the changed field the highest priority
       item.orderPriority = c;

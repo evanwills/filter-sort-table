@@ -81,6 +81,17 @@ export interface IObjStr {
  * Often used for storing error & warning messages relating to
  * updated values for an item
  */
+export interface IObjArrStrSimple {
+  [index: string]: Array<string>
+}
+
+/**
+ * List of key/value pairs where the value is always a list of
+ * strings
+ *
+ * Often used for storing error & warning messages relating to
+ * updated values for an item
+ */
 export interface IObjArrStr {
   [index: string]: Array<string>|IObjArrStr
 }
@@ -147,6 +158,10 @@ export interface IListCtrlOptionItem {
  * things (payments, forms, admins, income groups, etc)
  */
 export interface  IListCtrlItem {
+  /**
+   * Whether or not this control item is currently active
+   */
+  skip: boolean,
   /**
    * Property name of the field being filtered/sorted
    */

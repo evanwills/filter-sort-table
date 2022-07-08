@@ -4,17 +4,19 @@ import { ifDefined } from 'lit/directives/if-defined.js';
 import { repeat } from 'lit/directives/repeat.js'
 
 import { IHeadConfig } from './types/header-config'
-// import { IFilterSortCtrl } from './types/IFilterSortCtrl'
-import { FEventHandler, IDbEnum, IListCtrlItem, IObjScalarX } from './types/Igeneral';
+import { FEventHandler, IDbEnum, IObjArrStrSimple, IObjScalarX, UScalar } from './types/Igeneral';
 
 import { style } from './css/filter-sort-table.css';
+
+import { filterAndSort, getDataType, setSortOrder, skipFilter } from './utilities/filter-sort.utils';
+import { isInt, isNumber } from './utilities/validation';
+import { isTrue } from './utilities/sanitise';
+
+import { FilterSortCtrl } from './filter-sort-ctrl';
+import { ShortDate } from './short-date';
+
 import './filter-sort-ctrl';
 import './short-date';
-import { FilterSortCtrl } from './filter-sort-ctrl';
-import { filterAndSort, hasFilteredOpts } from './utilities/filter-sort.utils';
-// import { getBoolState } from './utilities/general.utils';
-// import { filterAndSort, filterSortSort } from './utilities/filter-sort.utils';
-// import { getNum } from './utilities/sanitise';
 
 /**
  * An example element.
@@ -28,7 +30,7 @@ export class FilterSortTable extends LitElement {
   headConfig : Array<IHeadConfig> = [];
 
   @property()
-  listData : Array<IObjScalarX> = [];
+  tableData : Array<IObjScalarX> = [];
 
   @property({ type: Boolean })
   html : boolean = false;
@@ -59,9 +61,6 @@ export class FilterSortTable extends LitElement {
   @state()
   nonCols : Array<IHeadConfig> = [];
 
-  @state()
-  listCtrl : Array<IListCtrlItem> = [];
-
   // ======================================================
   // Start private methods
 
@@ -74,6 +73,11 @@ export class FilterSortTable extends LitElement {
   private _doInit() {
     this.doInit = false;
     // console.group('_doInit()')
+    if (this.html) {
+      // console.log('parsing HTML table');
+      this._extractHeadConfig();
+      this._extractTableData();
+    }
 
     this._setCols();
 
@@ -110,15 +114,6 @@ export class FilterSortTable extends LitElement {
     this.nonCols = this.headConfig.filter(
       (col : IHeadConfig) => (col.isFilter && !col.isColumn)
     );
-
-    /**
-     * Make a list of all the active filters
-     */
-    this.listCtrl = this.headConfig.filter(
-      (col : IHeadConfig) => {
-        return (col.isFilter && (col.filter !== '' || col.min !== 0 || col.max !== 0 || col.bool !== 0 || col.filterOnEmpty || col.order !== 0 || hasFilteredOpts(col.options)))
-      }
-    );
     // console.group('_setCols() - after')
     // console.log('this.cols.length:', this.cols.length)
     // console.log('this.cols:', this.cols)
@@ -128,19 +123,26 @@ export class FilterSortTable extends LitElement {
     // console.groupEnd();
   }
 
+
   //  END:  Initialisation method
   // ------------------------------------------------------
   // START: Private event handler method
 
 
+  /**
+   * Generic event handler for handing all changes to filter controls
+   *
+   * @param event User triggered change event
+   */
   private _handler(event: Event) : void {
     const filter = event.target as FilterSortCtrl;
-    // console.group('filter-sort-table._handler()')
+    console.group('filter-sort-table._handler()')
     // console.log('this:', this);
     // console.log('filter.dataType:', filter.dataType);
     // console.log('filter:', filter);
     // console.log('filter.value:', filter.value);
     // console.log('filter.dataset.type:', filter.dataset.type);
+    let resetOrder = false
 
     this.headConfig = this.headConfig.map((field: IHeadConfig) : IHeadConfig => {
       if (filter.colName === field.field) {
@@ -148,6 +150,7 @@ export class FilterSortTable extends LitElement {
 
         switch(filter.dataset.subtype2) {
           case 'order':
+            resetOrder = true;
             output.order = filter.order;
             break;
           case 'filter':
@@ -161,6 +164,7 @@ export class FilterSortTable extends LitElement {
             break;
           case 'bool':
             output.bool = filter.bool;
+            output.skip = (output.bool !== 0);
             break;
           case 'option':
             output.options = filter.filteredOptions;
@@ -173,6 +177,9 @@ export class FilterSortTable extends LitElement {
             // console.log('output.isColumn (after):', output.isColumn)
             break;
         }
+        console.log('output:', output);
+        output.skip = skipFilter(output);
+        console.log('output:', output);
 
         return output;
       } else {
@@ -181,17 +188,179 @@ export class FilterSortTable extends LitElement {
     })
 
     this._setCols();
+    if (resetOrder) {
+      this.headConfig = setSortOrder(this.headConfig, filter.colName, filter.order);
+    }
 
     // this.listCtrl = this.headConfig.filter(item => {
 
     // }).map((item) : IListCtrlItem => {
 
     // })
-    // console.log('this:', this);
-    // console.groupEnd();
+    console.log('this:', this);
+    console.groupEnd();
   }
 
+
   //  END:  Private event handler method
+  // ------------------------------------------------------
+  // START: Methods for extracting data from HTML table
+
+
+  /**
+   * Extract column header data from <TH> & <TD> elements in a
+   * table's <THEAD>
+   */
+  private _extractHeadConfig = () : void => {
+    // console.log('this:', this)
+    const cols : NodeListOf<HTMLTableCellElement> = this.querySelectorAll('thead > tr:last-child > *')
+    // console.log('cols:', cols)
+    const output : Array<IHeadConfig> = [];
+
+    for (let a = 0; a < cols.length; a += 1) {
+      const col = cols[a] as HTMLElement;
+      // console.log('cols[' + a + ']:', cols[a])
+
+      const tmp : IHeadConfig = {
+        label: (col.innerHTML === col.innerText)
+          ? col.innerText.trim()
+          : col.innerHTML,
+        isColumn: true,
+        isFilter: (typeof col.dataset.datatype === 'string'  && col.dataset.datatype.trim() !== ''),
+        type: (typeof col.dataset.datatype === 'string' && col.dataset.datatype !== '')
+          ? getDataType(col.dataset.datatype)
+          : 'text',
+        field: (typeof col.dataset.colname === 'string')
+          ? col.dataset.colname
+          : col.id,
+        filter: '',
+        min: 0,
+        max: 0,
+        bool: 0,
+        options: [],
+        order: 0,
+        orderByValue: false,
+        orderPriority: -1,
+        filterOnEmpty: false,
+        skip: true
+      }
+
+      if (tmp.type === 'option' && typeof col.dataset.enumlist === 'string' && col.dataset.enumlist !== '') {
+        const enums = col.dataset.enumlist.split(',');
+        const enumList : Array<IDbEnum> = [];
+        for (let b = 0; b < enums.length; b += 1) {
+          const _enum = enums[b].split(':');
+          if (_enum.length === 2 && isInt(_enum[0])) {
+            enumList.push({
+              id: parseInt(_enum[0]),
+              name: _enum[1],
+              description: ''
+            })
+          }
+        }
+      }
+      tmp.field = tmp.field.trim();
+
+      if (tmp.field === '') {
+        tmp.isFilter = false
+        tmp.field = col.innerText.trim().replace(/\s+/g, '-');
+      }
+
+      output.push(tmp);
+    }
+
+    this.headConfig = output;
+  }
+
+  /**
+   * Extract row data from a cells with a table row
+   */
+  private _extractTableData = () : void => {
+    const output : Array<IObjScalarX> = [];
+
+    const rows : NodeListOf<HTMLTableRowElement> = this.querySelectorAll('tbody > tr');
+    const options : IObjArrStrSimple = {};
+    this.tableData = [];
+
+    for (let a = 0; a < rows.length; a += 1) {
+      const tmp : IObjScalarX = {};
+      // console.log('rows[' + a + '].children', rows[a].children)
+
+      for (let b = 0; b < this.headConfig.length; b += 1) {
+        const ctrlItem : IHeadConfig = this.headConfig[b];
+        if (typeof rows[a].children[b] !== 'undefined') {
+          let _val : UScalar = rows[a].children[b].innerText.trim().replace(/\s+/g, ' ');
+          // console.log('rows[' + a + '].children[' + b + ']:', rows[a].children[b])
+
+          switch (this.headConfig[b].type) {
+            case 'date':
+            case 'datetime':
+              if (typeof rows[a].children[b].children !== 'undefined' && typeof rows[a].children[b].children[0] !== 'undefined') {
+                // console.log('rows[' + a + '].children[' + b + '].children[0]:', rows[a].children[b].children[0])
+                // console.log('rows[' + a + '].children[' + b + '].children[0].tagName:', rows[a].children[b].children[0].tagName)
+                if (rows[a].children[b].children[0].tagName === 'SHORT-DATE') {
+                  _val = (rows[a].children[b].children[0] as ShortDate).timestamp;
+                }
+              } else {
+                const _tmp = new Date(_val as string);
+                if (_tmp.toString() !== 'Invalid Date') {
+                  _val = (_tmp.getTime() / 1000);
+                }
+
+              }
+              break;
+
+            case 'bool':
+              _val = isTrue(_val);
+              break;
+
+            case 'number':
+              _val = isNumber(_val)
+                ? parseFloat(_val as string)
+                : _val;
+              break;
+
+            case 'option':
+              if (typeof ctrlItem.enumList === 'undefined') {
+                if (typeof options[ctrlItem.field] === 'undefined') {
+                  options[ctrlItem.field] = [];
+                }
+                if (options[ctrlItem.field].indexOf(_val as string) === -1) {
+                  options[ctrlItem.field].push(_val as string)
+                }
+              }
+
+          }
+
+          tmp[this.headConfig[b].field] = _val;
+        }
+
+      }
+      output.push(tmp);
+      // console.log('cols[' + a + ']', cols[a])
+    }
+
+    // Add enums for fixed option columns
+    this.headConfig = this.headConfig.map((item: IHeadConfig) : IHeadConfig => {
+      if (item.type === 'option' && typeof item.enumList === 'undefined' && typeof options[item.field] !== 'undefined') {
+        item.enumList = options[item.field].map(
+          (name: string, index: number) : IDbEnum => {
+            return {
+              id: index + 1,
+              name: name,
+              description: ''
+            }
+          }
+        )
+      }
+      return item;
+    })
+
+    this.tableData = output;
+  }
+
+
+  //  END:  Methods for extracting data from HTML table
   // ------------------------------------------------------
   // START: Private render methods
 
@@ -229,13 +398,13 @@ export class FilterSortTable extends LitElement {
   }
 
 
-  private _renderCell = (col: IHeadConfig, row : IObjScalarX, index: number) : TemplateResult => {
+  private _renderCell = (col: IHeadConfig, row : IObjScalarX, rowIndex: number, colIndex: number) : TemplateResult => {
     // console.group('_renderCell()');
     // console.log('col:', col)
     // console.log('row:', row)
     // console.log('id:', this.id)
     // console.log('index:', index)
-    const id = this.id + '--' + index;
+    const id = this.id + '--' + rowIndex;
     const colID = this.id + '--' + col.field
     let value : TemplateResult|string = (col.type === 'date' || col.type === 'datetime')
       ? html`<short-date timestamp="${row[col.field]}"></short-date>`
@@ -249,7 +418,7 @@ export class FilterSortTable extends LitElement {
     }
 
     // console.groupEnd();
-    return (index === 0)
+    return (colIndex === 0)
       ? html`<th id="${id}" header="${colID}" class="${ifDefined(_class)}">${value}</th>`
       : html`<td headers="${id} ${colID}" class="${ifDefined(_class)}">${value}</td>`;
   }
@@ -257,15 +426,16 @@ export class FilterSortTable extends LitElement {
   /**
    * Render a single table row
    *
-   * @param row data for a single row in a table
+   * @param row   Data for a single row in a table
+   * @param index Index of the row being rendered
    *
    * @returns HTML table body row
    */
-  private _renderRow = (row : IObjScalarX) : TemplateResult => {
+  private _renderRow = (row : IObjScalarX, rowIndex : number) : TemplateResult => {
     return html`
       <tr>
         ${this.cols.map(
-          (col : IHeadConfig, index: number) => this._renderCell(col, row, index)
+          (col : IHeadConfig, colIndex: number) => this._renderCell(col, row, rowIndex, colIndex)
         )}
       </tr>
     `;
@@ -283,7 +453,7 @@ export class FilterSortTable extends LitElement {
       this._doInit();
     }
 
-    // const data = filterAndSort(this.listData, this.)
+    // const data = filterAndSort(this.tableData, this.)
 
     return html`
       <table>
@@ -295,7 +465,7 @@ export class FilterSortTable extends LitElement {
           </tr>
         </thead>
         <tbody>
-          ${repeat(filterAndSort(this.listData, this.listCtrl), item => item.id, this._renderRow)}
+          ${repeat(filterAndSort(this.tableData, this.headConfig), item => item.id, this._renderRow)}
         </tbody>
       </table>
     `;
