@@ -209,7 +209,6 @@ export interface  IListCtrlItem {
   orderPriority: number
 }
 
-
 export type FTabTmpl = (tab : TabAccordion) => TemplateResult;
 
 export interface ISingleInputOptionSimple {
@@ -316,7 +315,7 @@ export interface IEventData {
  *
  * Often used for generic state typing
  */
- export interface IGroupedInputOptionList {
+export interface IGroupedInputOptionList {
   [index: string]: Array<ISingleInputOption>
 }
 

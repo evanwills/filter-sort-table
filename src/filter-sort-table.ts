@@ -1,6 +1,7 @@
 import { html, LitElement, TemplateResult } from 'lit';
-import { ifDefined } from 'lit/directives/if-defined.js';
 import { customElement, property, state } from 'lit/decorators.js';
+import { ifDefined } from 'lit/directives/if-defined.js';
+import { repeat } from 'lit/directives/repeat.js'
 
 import { IHeadConfig } from './types/header-config'
 // import { IFilterSortCtrl } from './types/IFilterSortCtrl'
@@ -10,7 +11,7 @@ import { style } from './css/filter-sort-table.css';
 import './filter-sort-ctrl';
 import './short-date';
 import { FilterSortCtrl } from './filter-sort-ctrl';
-import { hasFilteredOpts } from './utilities/filter-sort.utils';
+import { filterAndSort, hasFilteredOpts } from './utilities/filter-sort.utils';
 // import { getBoolState } from './utilities/general.utils';
 // import { filterAndSort, filterSortSort } from './utilities/filter-sort.utils';
 // import { getNum } from './utilities/sanitise';
@@ -110,9 +111,12 @@ export class FilterSortTable extends LitElement {
       (col : IHeadConfig) => (col.isFilter && !col.isColumn)
     );
 
+    /**
+     * Make a list of all the active filters
+     */
     this.listCtrl = this.headConfig.filter(
       (col : IHeadConfig) => {
-        return (col.filter !== '' || col.min !== 0 || col.max !== 0 || col.bool !== 0 || col.filterOnEmpty || col.order !== 0 || hasFilteredOpts(col.options))
+        return (col.isFilter && (col.filter !== '' || col.min !== 0 || col.max !== 0 || col.bool !== 0 || col.filterOnEmpty || col.order !== 0 || hasFilteredOpts(col.options)))
       }
     );
     // console.group('_setCols() - after')
@@ -131,6 +135,12 @@ export class FilterSortTable extends LitElement {
 
   private _handler(event: Event) : void {
     const filter = event.target as FilterSortCtrl;
+    // console.group('filter-sort-table._handler()')
+    // console.log('this:', this);
+    // console.log('filter.dataType:', filter.dataType);
+    // console.log('filter:', filter);
+    // console.log('filter.value:', filter.value);
+    // console.log('filter.dataset.type:', filter.dataset.type);
 
     this.headConfig = this.headConfig.map((field: IHeadConfig) : IHeadConfig => {
       if (filter.colName === field.field) {
@@ -177,6 +187,8 @@ export class FilterSortTable extends LitElement {
     // }).map((item) : IListCtrlItem => {
 
     // })
+    // console.log('this:', this);
+    // console.groupEnd();
   }
 
   //  END:  Private event handler method
@@ -229,13 +241,17 @@ export class FilterSortTable extends LitElement {
       ? html`<short-date timestamp="${row[col.field]}"></short-date>`
       : row[col.field].toString();
 
-    value = (typeof col.urlField === 'string' && col.urlField !== '' && typeof row[col.urlField] === 'string')
-      ? html`<a href="${row[col.urlField]}" @click=${ifDefined(this.linkHandler)}>${value}</a>`
-      : value
+    let _class : string|undefined = undefined;
+    if (typeof col.urlField === 'string' && col.urlField !== '' && typeof row[col.urlField] === 'string') {
+      value = html`<a href="${row[col.urlField]}" @click=${ifDefined(this.linkHandler)}>${value}</a>`;
+      _class = 'has-link'
+
+    }
+
     // console.groupEnd();
     return (index === 0)
-      ? html`<th id="${id}" header="${colID}">${value}</th>`
-      : html`<td headers="${id} ${colID}">${value}</td>`;
+      ? html`<th id="${id}" header="${colID}" class="${ifDefined(_class)}">${value}</th>`
+      : html`<td headers="${id} ${colID}" class="${ifDefined(_class)}">${value}</td>`;
   }
 
   /**
@@ -279,7 +295,7 @@ export class FilterSortTable extends LitElement {
           </tr>
         </thead>
         <tbody>
-          ${this.listData.map(row => this._renderRow(row))}
+          ${repeat(filterAndSort(this.listData, this.listCtrl), item => item.id, this._renderRow)}
         </tbody>
       </table>
     `;

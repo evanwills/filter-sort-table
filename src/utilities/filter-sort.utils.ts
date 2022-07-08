@@ -9,6 +9,7 @@ import { isInt, isNumber } from './validation';
 import { getBoolState } from './general.utils';
 import { IFilterSortCtrl } from '../types/IFilterSortCtrl';
 import { UScalarX } from '../types/Igeneral';
+import { IHeadConfig } from '../types/header-config';
 
 /**
  * This file contains a list of pure utility functions to help filter
@@ -427,6 +428,46 @@ export const getToggleInput = (
   `;
 }
 
+
+
+/**
+ * Get item from an array based on item's ID value matching the
+ * supplied ID value
+ *
+ * @param {string}  varName Name of enum list
+ * @param {integer} id      value of the id property to me matched
+ *
+ * @returns {object,false} matched object or FALSE if object was not matched by ID
+ */
+export const getEnumNameByID = (enums : Array<IDbEnum>, id : number) : string => {
+  for (let a = 0; a < enums.length; a += 1) {
+    if (enums[a].id === id) {
+      return enums[a].name
+    }
+  }
+
+  return '[UNKNOWN]';
+}
+
+/**
+ * Get item from an array based on item's ID value matching the
+ * supplied ID value
+ *
+ * @param {string}  varName Name of enum list
+ * @param {integer} id      value of the id property to me matched
+ *
+ * @returns {object,false} matched object or FALSE if object was not matched by ID
+ */
+export const getEnumIdByName = (enums : Array<IDbEnum>, name : string) : number => {
+  for (let a = 0; a < enums.length; a += 1) {
+    if (enums[a].name === name) {
+      return enums[a].id
+    }
+  }
+
+  return -1;
+}
+
 /**
  * Array.filter callback function for filtering data based on fixed option
  *
@@ -456,6 +497,18 @@ const filterOnOptions = (options : Array<IListCtrlOptionItem>, id: number) : boo
   }
 }
 
+const doFilter = (listCtrl: IHeadConfig) : boolean => {
+  return (listCtrl.isFilter && (
+      (listCtrl.filter !== '' && listCtrl.filter !== 0) ||
+      listCtrl.min !== 0 ||
+      listCtrl.max !== 0 ||
+      listCtrl.bool !== 0 ||
+      listCtrl.filterOnEmpty ||
+      hasFilteredOpts(listCtrl.options)
+    )
+  )
+}
+
 /**
  * Test a single item to see if it passes all the fitlers.
  *
@@ -465,28 +518,45 @@ const filterOnOptions = (options : Array<IListCtrlOptionItem>, id: number) : boo
  * @returns TRUE if item was *NOT* excluded by any of the filters.
  *          FALSE otherwise
  */
-const filterSortFilter = (item : UScalarX, listCtrl: Array<IListCtrlItem>) : boolean => {
+const filterSortFilter = (item : UScalarX, listCtrl: Array<IHeadConfig>) : boolean => {
+  // console.group('filterSortFilter()');
+  // console.log('item:', item)
+
   for (let a = 0; a < listCtrl.length; a += 1) {
+    if (!doFilter(listCtrl[a])) {
+      // console.log('listCtrl[' + a + ']:', listCtrl[a])
+      // console.log('skipping filter')
+      // console.groupEnd();
+      continue;
+    }
     const ctl = listCtrl[a];
-    const _type = typeof item[ctl.field];
+    let _type = typeof item[ctl.field];
 
     if (_type === 'undefined') {
-        throw new Error(
+      // console.groupEnd();
+      throw new Error(
         'Cannot filter on `' + ctl.field + '` if item does contain that property'
       );
     }
+    // console.group('filterSortFilter() inner');
+    // console.log('listCtrl[' + a + ']:', listCtrl[a])
 
     let _val = item[ctl.field];
+    // console.log('_type:', _type)
+    // console.log('_val:', _val)
 
     switch (ctl.type) {
       case 'text':
         if (_val.toLowerCase().indexOf((ctl.filter as string).toLowerCase()) === -1) {
+          // console.groupEnd(); console.groupEnd();
           return false;
         }
         break;
 
       case 'number':
+        // console.log('filtreing on number')
         if (_type !== 'number') {
+          // console.groupEnd(); console.groupEnd();
           throw new Error(
               'Cannot filter on `' + ctl.field + '` because item.' +
               ctl.field + ' is not a number'
@@ -494,19 +564,28 @@ const filterSortFilter = (item : UScalarX, listCtrl: Array<IListCtrlItem>) : boo
         }
 
         if (ctl.min !== 0 || ctl.max !== 0) {
+          // console.log('filtering on min & max')
           if (ctl.min > _val || ctl.max < _val) {
-            console.groupEnd(); console.groupEnd();
+            // console.log('val is less than min or valu is greater than max')
+            // console.groupEnd(); console.groupEnd();
             return false;
           }
-        } else if ((typeof ctl.filter === 'number' &&  _val !== ctl.filter) ||
-          (typeof ctl.filter === 'string' && _val !== parseFloat(ctl.filter))
-        ) {
-          return false;
+        } else {
+          const ctlVal = (typeof ctl.filter === 'string')
+            ? parseFloat(ctl.filter)
+            : ctl.filter
+          if (ctlVal !== 0 && _val !== ctlVal) {
+            // console.log('filtering on numberic value')
+            // console.groupEnd(); console.groupEnd();
+              return false;
+          }
         }
         break;
 
       case 'bool':
+        // console.log('filtering on boolean')
         if (_type !== 'boolean') {
+          // console.groupEnd(); console.groupEnd();
           throw new Error(
             'Cannot filter on `' + ctl.field + '` because item.' +
             ctl.field + ' is not boolean'
@@ -515,24 +594,43 @@ const filterSortFilter = (item : UScalarX, listCtrl: Array<IListCtrlItem>) : boo
         if ((ctl.bool === 1 && _val === false)
           || (ctl.bool === -1 && _val === true)
         ) {
+          // console.groupEnd(); console.groupEnd();
           return false;
         }
 
         break;
 
       case 'option':
+        // console.log('filtering on option')
+        if (_type === 'string') {
+          if (typeof ctl.enumList === 'undefined') {
+            // console.groupEnd(); console.groupEnd();
+            throw new Error(
+              'Cannot get value to match filter on `' + ctl.field + '` because ' +
+              ctl.field + ' does not contain a list of optons to match on'
+            );
+          }
+          _val = getEnumIdByName(ctl.enumList, _val);
+          if (_val !== -1) {
+            _type = 'number';
+          }
+        }
         if (_type !== 'number') {
+          // console.groupEnd(); console.groupEnd();
           throw new Error(
               'Cannot filter on `' + ctl.field + '` because item.' +
               ctl.field + ' is not a number'
           );
         }
         if (filterOnOptions(ctl.options, _val as number) === false) {
+          // console.groupEnd(); console.groupEnd();
           return false;
         }
     }
+    // console.groupEnd();
   }
 
+  // console.groupEnd();
   return true;
 }
 

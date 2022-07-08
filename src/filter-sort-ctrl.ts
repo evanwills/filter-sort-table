@@ -234,12 +234,12 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
     let ok = false;
     let val = 0;
     this.dataset.subtype2 = '';
-    // console.group('_handler()')
-    // console.log('this:', this);
-    // console.log('this.dataType:', this.dataType);
-    // console.log('input:', input);
-    // console.log('input.value:', input.value);
-    // console.log('input.dataset.type:', input.dataset.type);
+    console.group('filter-sort-ctrl._handler()')
+    console.log('this:', this);
+    console.log('this.dataType:', this.dataType);
+    console.log('input:', input);
+    console.log('input.value:', input.value);
+    console.log('input.dataset.type:', input.dataset.type);
 
     switch (input.dataset.type) {
       case 'filter':
@@ -345,15 +345,15 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
     }
 
     if (ok === true) {
-      // console.log('dispatch event')
+      console.log('dispatch event')
       this.dispatchEvent(
         new Event('change', { bubbles: true, composed: true })
       )
     }
-    // console.log('this:', this)
-    // console.log('this.dataset:', this.dataset)
-    // console.log('this.value:', this.value);
-    // console.groupEnd();
+    console.log('this:', this)
+    console.log('this.dataset:', this.dataset)
+    console.log('this.value:', this.value);
+    console.groupEnd();
   }
 
   private _renderUI(id : string) : TemplateResult {

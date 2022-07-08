@@ -1,5 +1,5 @@
 import { css } from "lit";
-import { srOnly } from "./sr-only.css";
+// import { srOnly } from "./sr-only.css";
 
 export const style = css`
   :host {
@@ -44,6 +44,9 @@ export const style = css`
     padding: var(--cell-v-padding) var(--cell-h-padding);
   }
   .filtered-col {
+    padding: 0;
+  }
+  .has-link {
     padding: 0;
   }
 `;
