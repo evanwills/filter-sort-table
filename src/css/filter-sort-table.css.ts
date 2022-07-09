@@ -1,4 +1,5 @@
 import { css } from "lit";
+import { cbBtn } from "./cb-btn.css";
 import { modal } from "./modal.css";
 import { srOnly } from "./sr-only.css";
 // import { srOnly } from "./sr-only.css";
@@ -18,7 +19,8 @@ export const style = css`
     --font-family: Arial, Helvetica, sans-serif;
     --export-bg-colour: #040;
     --export-text-colour: #fff;
-
+    --true-icon: "\u2713";
+    --false-icon: "\u2717";
   }
 
   table {
@@ -63,10 +65,53 @@ export const style = css`
     padding-right: 2.5rem;
     position: relative;
   }
-  .extra-open {
-    position: absolute;
+  .wrap > h2 {
+    box-sizing: border-box;
+    margin: -1.5rem -1.5rem 1rem;
+    padding: 0.5rem;
+    position: relative;
+  }
+  .extra__list {
+    height: 100%;
+    list-style: none;
+    max-height: calc(${maxHeight}rem - 5rem);
+    margin: -0.75rem -2rem -2rem -2rem;
+    overflow-y: auto;
+    padding: 1rem 0 0 0;
+    position: relative;
+    z-index: 100;
+  }
+  .wrap li {
+    padding: var(--cell-v-padding) 1rem;
+    margin: 0;
+    border-top: var(--row-border);
+    list-style: none;
+  }
+  .wrap li:first-child {
+    border-top: none;
+  }
+  .toggles {
+    position: sticky;
     top: 0;
-    right: 0;
+    float: right;
+  }
+  .extra__list__wrap {
+    position: relative;
+  }
+  .extra__list__wrap::after {
+    background: linear-gradient(rgba(255, 255,255, 1), rgba(255, 255,255, 0.7), rgba(255, 255, 255, 0));
+    top: 0;
+    content: '';
+    display: block;
+    height: 1.5rem;
+    left: -2rem;
+    position: absolute;
+    right: -2rem;
+    width: calc(100% + 3rem);
+    z-index: 1000;
+  }
+  .extra-open {
+    cursor: pointer;
     display: block;
     width: 2rem;
     height: 2rem;
@@ -79,75 +124,75 @@ export const style = css`
   .extra-open::after {
     content: '\u22EE';
   }
-  .wrap > h2 {
-    box-sizing: border-box;
-    margin: -1.5rem -1.5rem 0.5rem;
-    padding: 0.5rem;
-    position: relative;
-  }
-  .wrap > h2::after {
-    background: linear-gradient(rgba(255, 255,255, 1), rgba(255, 255,255, 0.7), rgba(255, 255, 255, 0));
-    bottom: -1rem;
-    content: '';
-    display: block;
-    height: 1.5rem;
-    left: -0.5rem;
-    position: absolute;
-    right: -0.5rem;
-    width: 100%;
-    z-index: 1000;
-  }
-  .wrap > ul {
-    height: 100%;
-    list-style: none;
-    max-height: ${maxHeight}rem;
-    margin: -1rem -2rem -2rem -2rem;
-    overflow-y: auto;
-    padding: 1rem 0 0 0;
-    position: relative;
-    z-index: 100;
-  }
-  /**
-  .wrap::after {
-    content: '';
-    display: block;
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 100%;
-    height: 1rem;
-    background-color: #fff;
-  }
-  */
-  .wrap li {
-    padding: var(--cell-v-padding) 1rem;
-    margin: 0;
-    border-top: var(--row-border);
-    list-style: none;
-  }
-  .wrap li:first-child {
-    border-top: none;
-  }
-  .export {
+  .export, .download {
     background-color: var(--export-bg-colour);
     color: var(--export-text-colour);
+    padding: 0.45rem 1rem;
+    width: auto;
+  }
+  .export {
+    cursor: pointer;
     border: var(--row-border);
     font-family: var(--font-family);
     font-weight: bold;
-    padding: 0.375rem 1rem;
-    position: absolute;
-    right: -6.25rem;
     text-decoration: none;
     text-transform: uppercase;
-    top: 0rem;
     transform: rotate(90deg);
-    transform-origin: top left;
+    transform-origin: left bottom;
     width: auto;
+    margin-top: -1rem;
   }
-  .filter-sort__wrap--extra .export {
-    top: 3rem;
+  .download__wrap {
+    left: 0;
+    margin: 0.75rem 0.5rem 0px;
+    padding: 0px;
+    position: absolute;
+    right: 4rem;
+    text-align: right;
+    top: 0rem;
+    width: calc(100% - 2rem);
   }
+  .download {
+    text-decoration: none;
+  }
+  .download:hover {
+    text-decoration: underline;
+  }
+
+  .focusable:focus {
+    outline: #44f solid 0.15rem;
+    outline-offset: 0.1rem;
+  }
+
+  .export-ctrl {
+    display: grid;
+    grid-template-areas: "toggle up"
+                         "toggle down";
+    grid-template-columns: 1fr 3rem;
+    grid-template-rows: auto auto;
+  }
+  .cb-btn__wrap {
+    grid-area: toggle;
+    align-self: center;
+  }
+  .export-up {
+    grid-area: up;
+  }
+  .export-down {
+    grid-area: down;
+  }
+  .sep-ctrl {
+    display: flex;
+    column-gap: 0.5rem;
+  }
+  .sep-ctrl__label {
+    width: 9.5rem;
+    font-weight: bold;
+
+  }
+
+
   ${srOnly}
   ${modal(maxHeight, 40)}
+  ${cbBtn}
 `;

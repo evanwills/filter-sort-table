@@ -8,7 +8,7 @@ import { FEventHandler, IDbEnum, IListCtrlItem, IObjArrStrSimple, IObjScalarX, U
 
 import { style } from './css/filter-sort-table.css';
 
-import { filterAndSort, getDataType, getExportDataURL, headConfigToListCtrl, setExportColOrder, setSortOrder, skipFilter } from './utilities/filter-sort.utils';
+import { convertSep, filterAndSort, getDataType, getExportDataURL, getToggleInput, headConfigToListCtrl, moveExportCol, setExportColOrder, setSortOrder, skipFilter, sortExportCols } from './utilities/filter-sort.utils';
 import { isInt, isNumber } from './utilities/validation';
 import { isTrue } from './utilities/sanitise';
 
@@ -96,6 +96,8 @@ export class FilterSortTable extends LitElement {
   nonCols : Array<IHeadConfig> = [];
   @state()
   showExtra : boolean = false;
+  @state()
+  showExport : boolean = false;
 
   // ======================================================
   // Start private methods
@@ -347,7 +349,7 @@ export class FilterSortTable extends LitElement {
 
   //  END:  Methods for extracting data from HTML table
   // ------------------------------------------------------
-  // START: Private event handler method
+  // START: Private event handler methods
 
 
   /**
@@ -442,13 +444,91 @@ export class FilterSortTable extends LitElement {
 
   }
 
-  private _toggleExtra(_event: Event) : void {
+  /**
+   * Toggle show/hide status modal UI
+   *
+   * @param event User triggered click event
+   */
+  private _toggleModal(event: Event) : void {
     // _event.preventDefault();
-    console.group('_toggleExtra()')
-    console.log('this.showExtra:', this.showExtra)
-    this.showExtra = !this.showExtra;
-    console.log('this.showExtra:', this.showExtra)
-    console.groupEnd();
+    const btn = event.target as HTMLButtonElement;
+
+    switch (btn.value) {
+      case 'extra':
+        this.showExtra = !this.showExtra;
+        break;
+
+      case 'export':
+        this.showExport = !this.showExport;
+        break;
+
+      case 'up':
+      case 'down':
+        this.headConfig = moveExportCol(
+          this.headConfig, btn.dataset.type as string, btn.value
+        );
+
+        this.lastFiltered = btn.dataset.type as string;
+        this.dispatchEvent(
+          new Event('change', { bubbles: true, composed: true })
+        );
+        break;
+    }
+  }
+
+  /**
+   * Toggle include/omit status of column in export
+   *
+   * @param event User triggered click event
+   */
+  private _toggleExportCol(event: Event) : void {
+    const cb = event.target as HTMLInputElement;
+    let hasChanged = false;
+
+    this.headConfig = this.headConfig.map((col: IHeadConfig) : IHeadConfig => {
+      if (col.field === cb.dataset.type) {
+        hasChanged = true;
+        return {
+          ...col,
+          export: !col.export
+        }
+      } else {
+        return col;
+      }
+    });
+
+    if (hasChanged) {
+      this.lastFiltered = cb.dataset.type as string;
+      this.dispatchEvent(
+        new Event('change', { bubbles: true, composed: true })
+      );
+    }
+  }
+
+  private _updateSep(event: Event) : void {
+    const input = event.target as HTMLInputElement;
+    let hasChanged = false;
+
+    switch (input.dataset.type) {
+      case 'column':
+        this.colSeperator = convertSep(input.value, false);
+        this.lastFiltered = 'column-sep';
+        hasChanged = true;
+        break;
+
+      case 'row':
+        this.rowSeperator = convertSep(input.value, false);
+        this.lastFiltered = 'row-sep';
+        hasChanged = true;
+        break;
+    }
+
+    if (hasChanged) {
+      this.dispatchEvent(
+        new Event('change', { bubbles: true, composed: true })
+      );
+    }
+    console.log('this:', this)
   }
 
 
@@ -558,17 +638,29 @@ export class FilterSortTable extends LitElement {
    *          rendered as columns
    */
   private _renderExtraFilters = () : TemplateResult|string => {
-    if (this.nonCols.length > 0) {
-      const show = (this.showExtra)
-        ? 'show'
-        : 'hide';
-      return html`
-        <button @click=${this._toggleExtra} class="extra-open"><span class="sr-only">Show extra filters</span></button>
-        <div class="wrap wrap--${show}">
-          <button @click=${this._toggleExtra} class="btn-close btn-close--${show}"><span class="sr-only">Hide extra filters</span></button>
-          <h2>Filters for hidden columns</h2>
-          <ul class="extra__list">
+    if (this.nonCols.length === 0) {
+      return '';
+    }
 
+    const show = (this.showExtra)
+      ? 'show'
+      : 'hide';
+    const tabIndex = (this.showExtra)
+      ? undefined
+      : -1
+
+    return html`
+      <button @click=${this._toggleModal} class="extra-open focusable" value="extra"><span class="sr-only">Show extra filters</span></button>
+      <div class="wrap wrap--${show}">
+        <button class="btn-close btn-close--${show} focusable"
+                value="extra"
+                tabindex="${ifDefined(tabIndex)}"
+               @click=${this._toggleModal}>
+          <span class="sr-only">Hide extra filters</span>
+        </button>
+        <h2>Filters for hidden columns</h2>
+        <div class="extra__list__wrap">
+          <ul class="extra__list">
             ${this.headConfig.filter(
               (col: IHeadConfig) => (!col.isColumn && col.isFilter)
             ).map(
@@ -584,23 +676,152 @@ export class FilterSortTable extends LitElement {
                                     bool="${col.bool}"
                                     order="${col.order}"
                                     iscolumn="${col.isColumn}"
-                                    ?togglecol="${this.toggleCol}"
-                                    .statedata=${col.options}
-                                    .options=${col.enumList}
-                                    @change=${this._handler}
-                                    alwaysexpanded>
+                                   ?togglecol="${this.toggleCol}"
+                                   .statedata=${col.options}
+                                   .options=${col.enumList}
+                                   @change=${this._handler}
+                                   ?expanded=${this.showExtra}
+                                    alwaysExpanded>
                     ${col.label}
                   </filter-sort-ctrl>
                 </li>`
 
           )}
-          </ul>
+        </ul>
+
         </div>
-        <button @click=${this._toggleExtra} class="bg-close bg-close--${show}"><span class="sr-only">Hide extra filters</span></button>
-      `;
-    } else {
+      </div>
+      <button class="bg-close bg-close--${show}"
+              value="extra"
+              tabindex="${ifDefined(tabIndex)}"
+             @click=${this._toggleModal}>
+        <span class="sr-only">Hide extra filters</span>
+      </button>
+    `;
+  }
+
+  private _renderExportColCtrl = (tabIndex: number|undefined) => (col: IHeadConfig) : TemplateResult => {
+     getToggleInput(
+      this.id, col.field, col.export,
+      'Include ' + col.label, 'Omit ' + col.label,
+      this._toggleExportCol,
+      col.label,
+      tabIndex
+    );
+    return html`
+      <li class="export-ctrl">
+        <span class="cb-btn__wrap">
+          <input
+            type="checkbox"
+            class="cb-btn__input"
+            id="${this.id}__${col.field}"
+            data-type="${col.label}"
+            tabindex="${ifDefined(tabIndex)}"
+           ?checked="${col.export}"
+           @change=${this._toggleExportCol}
+          />
+          <label
+            for="${this.id}__${col.label}"
+            class="cb-btn__label"
+            title="${col.label}"
+          >${(col.export)
+              ? 'Include ' + col.label
+              : 'Omit ' + col.label
+          }</label>
+        </span>
+        <button value="up"
+                data-type="${col.field}"
+                class="export-up focusable"
+                tabindex="${ifDefined(tabIndex)}"
+               @click=${this._toggleModal}>
+          Up
+        </button>
+        <button value="down"
+                data-type="${col.field}"
+                class="export-down focusable"
+                tabindex="${ifDefined(tabIndex)}"
+               @click=${this._toggleModal}>
+          Down
+        </button>
+      </li>
+  `;
+  }
+
+  private _renderExport = () : TemplateResult|string => {
+    if (this.allowExport === false) {
       return '';
     }
+
+    const cols = [...this.headConfig];
+    cols.sort(sortExportCols);
+
+    const show = (this.showExport)
+      ? 'show'
+      : 'hide';
+    const tabIndex = (this.showExport)
+      ? undefined
+      : -1
+
+    return html`
+      <button value="export"
+              class="export focusable"
+             @click=${this._toggleModal}>
+        Export
+      </button>
+      <div class="wrap wrap--${show}">
+        <button class="btn-close btn-close--${show} focusable"
+                value="export"
+                tabindex="${tabIndex}"
+               @click=${this._toggleModal}>
+          <span class="sr-only">Hide export control</span>
+        </button>
+        <h2>Manage exported columns</h2>
+        <div class="extra__list__wrap">
+          <ul class="extra__list">
+            <li class="sep-ctrl">
+              <label for="${this.id}__colSep" class="sep-ctrl__label">Column seperator:</label>
+              <input type="text"
+                     id="${this.id}__colSep"
+                     value="${convertSep(this.colSeperator, true)}"
+                     maxlength="4"
+                     data-type="column"
+                     tabindex="${ifDefined(tabIndex)}"
+                     size="2"
+                    @change=${this._updateSep} />
+            </li>
+            <li class="sep-ctrl">
+              <label for="${this.id}__rowSep" class="sep-ctrl__label">Row seperator:</label>
+              <input type="text"
+                     id="${this.id}__rowSep"
+                     value="${convertSep(this.rowSeperator, true)}"
+                     maxlength="4"
+                     data-type="row"
+                     tabindex="${ifDefined(tabIndex)}"
+                     size="2"
+                    @change=${this._updateSep} />
+            </li>
+            ${repeat(
+              cols,
+              (col : IHeadConfig) => col.field,
+              this._renderExportColCtrl(tabIndex)
+            )}
+          </ul>
+        </div>
+        <p class="download__wrap">
+          <a href="#"
+             class="download focusable"
+             tabindex="${ifDefined(tabIndex)}"
+            @click=${this._download}>
+            Download
+          </a>
+        </p>
+      </div>
+      <button class="bg-close bg-close--${show}"
+              value="export"
+              tabindex="${ifDefined(tabIndex)}"
+             @click=${this._toggleModal}>
+        <span class="sr-only">Hide export control</span>
+      </button>`;
   }
 
   //  END:  Private render methods
@@ -652,6 +873,10 @@ export class FilterSortTable extends LitElement {
 
     return html`
       <div class="filter-sort__wrap${extraClass}">
+        <div class="toggles">
+          ${this._renderExtraFilters()}
+          ${this._renderExport()}
+        </div>
         <table>
           <thead>
             <tr>
@@ -664,11 +889,6 @@ export class FilterSortTable extends LitElement {
             ${repeat(filterAndSort(this.tableData, this.headConfig), item => item.id, this._renderRow)}
           </tbody>
         </table>
-        ${this._renderExtraFilters()}
-        ${(this.allowExport)
-          ? html`<a href="#" @click=${this._download} class="export">Export</a>`
-          : ''
-        }
       </div>
     `;
   }

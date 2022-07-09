@@ -441,25 +441,6 @@ export const getToggleInput = (
  *
  * @returns {object,false} matched object or FALSE if object was not matched by ID
  */
-export const getEnumNameByID = (enums : Array<IDbEnum>, id : number) : string => {
-  for (let a = 0; a < enums.length; a += 1) {
-    if (enums[a].id === id) {
-      return enums[a].name
-    }
-  }
-
-  return '[UNKNOWN]';
-}
-
-/**
- * Get item from an array based on item's ID value matching the
- * supplied ID value
- *
- * @param {string}  varName Name of enum list
- * @param {integer} id      value of the id property to me matched
- *
- * @returns {object,false} matched object or FALSE if object was not matched by ID
- */
 export const getEnumIdByName = (enums : Array<IDbEnum>, name : string) : number => {
   for (let a = 0; a < enums.length; a += 1) {
     if (enums[a].name === name) {
@@ -760,27 +741,6 @@ export const filterAndSort = (items : Array<IObjScalarX>, listCtrl : Array<IHead
 }
 
 /**
- * Get all filter control data for a single field
- *
- * @param listCtrl List of filter controls
- *
- * @returns Single control if one could be matched. NULL otherwise
- */
-export const getFilterData = (listCtrl : Array<IListCtrlItem>) => (field: string) : IListCtrlItem|false => {
-  // console.group(getFilterData)
-  // console.log('field:', field)
-  // console.log('listCtrl:', listCtrl)
-
-  const tmp = listCtrl.filter((item : IListCtrlItem): boolean => item.field === field)
-
-  // console.log('tmp:', tmp)
-  // console.groupEnd()
-  return (tmp.length === 1)
-    ? tmp[0]
-    : false;
-}
-
-/**
  * Ensure data type is valid
  *
  * @param input Data type to be validated
@@ -980,6 +940,28 @@ export const setExportColOrder = (cols : Array<IHeadConfig>) : Array<IHeadConfig
 }
 
 /**
+ * Sort columns by exportOrder
+ *
+ * Callback function passed to Array.sort()
+ *
+ * @param a Column A (to be compared to column B)
+ * @param b Column B (to be compared to column A)
+ *
+ * @returns -1 if column A should be moved up compared to column B
+ *          1 if column A should be moved down compared to column B
+ *          0 if no change is required
+ */
+export const sortExportCols = (a :IHeadConfig, b: IHeadConfig) : number => {
+  if (a.exportOrder < b.exportOrder) {
+    return -1;
+  } else if (a.exportOrder > b.exportOrder) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+/**
  * Generate a data URL for export download
  *
  * @param data           (Unfiltered) Table data to be exported
@@ -987,7 +969,8 @@ export const setExportColOrder = (cols : Array<IHeadConfig>) : Array<IHeadConfig
  * @param colSep         Column separator
  * @param rowSep         Row separator
  * @param includeHeaders Whether or not to include column headers
- * @returns
+ *
+ * @returns A delimited value string
  */
 export const getExportDataURL = (
   data: Array<IObjScalarX>,
@@ -1004,22 +987,14 @@ export const getExportDataURL = (
   const tmp : Array<IObjScalarX> = filterAndSort(data, cols);
   /**
    * List of column controls for exportable columns
+   *
    * @var exportCols
    */
   const exportCols : Array<IHeadConfig> = setExportColOrder(cols.filter((col: IHeadConfig) => col.export));
 
+
   // Sort the columns so they're in the right order for exporting.
-  exportCols.sort(
-    (a :IHeadConfig, b: IHeadConfig) : number => {
-      if (a.exportOrder < b.exportOrder) {
-        return -1;
-      } else if (a.exportOrder > b.exportOrder) {
-        return 1;
-      } else {
-        return 0;
-      }
-    }
-  );
+  exportCols.sort(sortExportCols);
 
   let output = '';
 
@@ -1039,11 +1014,14 @@ export const getExportDataURL = (
   // Loop through each row
   for (let a = 0; a < tmp.length; a += 1) {
     output += _rowSep;
+
+    // Loop through each column in this row
     for (let b = 0; b < exportCols.length; b += 1) {
       if (typeof tmp[a][(exportCols[b].field as string)] !== 'undefined') {
         //
         let val = tmp[a][(exportCols[b].field as string)];
 
+        // Make sure the data is in the right format
         switch (exportCols[b].type) {
           case 'bool':
             val = (val === true) ? 'Yes' : 'No';
@@ -1051,18 +1029,20 @@ export const getExportDataURL = (
 
           case 'date':
             console.log('val:', val);
-            val = new Date(val * 1000).toISOString().replace(/T.*$/, '');
+            val = new Date((val as number) * 1000).toISOString().replace(/T.*$/, '');
             break;
 
           case 'datetime':
             console.log('val:', val);
-            val = new Date(val * 1000).toISOString().replace(/T(.*?)\..*$/, ' $1');
+            val = new Date((val as number) * 1000).toISOString().replace(/T(.*?)\..*$/, ' $1');
             break;
         }
 
         output += _colSep + val
         _colSep = colSep;
       } else {
+        // Bugger something went wrong
+        // We don't have a field for this column in this row
         console.group('Bad field name')
         console.log('row:', tmp[a])
         console.log('column:', exportCols[b]);
@@ -1076,4 +1056,70 @@ export const getExportDataURL = (
   }
 
   return output;
+}
+
+/**
+ * Move a specific column's export order either up or down
+ *
+ * @param cols  All columns for this component
+ * @param field Name of column being moved
+ * @param dir   Direction of move (either up or down)
+ *
+ * @returns An updated list of columns where the specified column
+ *          has been moved either up or down in the export column
+ *          order.
+ */
+export const moveExportCol = (
+  cols : Array<IHeadConfig>, field : string, dir : string
+) : Array<IHeadConfig> => {
+  let incrememt = (dir === 'up')
+    ? -1
+    : 1;
+  let oldOrder = -1;
+
+  for (let a = 0; a < cols.length; a += 1) {
+    if (cols[a].field === field) {
+      oldOrder = cols[a].exportOrder
+      break;
+    }
+  }
+  let newOrder = oldOrder + incrememt;
+  return cols.map(
+    (col : IHeadConfig) : IHeadConfig => {
+      if (col.field === field) {
+        return {
+          ...col,
+          exportOrder: newOrder
+        }
+      } else if (col.exportOrder === newOrder) {
+        return {
+          ...col,
+          exportOrder: (col.exportOrder + (incrememt * -1))
+        }
+      } else {
+        return col;
+      }
+    }
+  );
+}
+
+export const convertSep = (sep : string, toRender: boolean) : string => {
+  const special = [
+    ['\t', '\\t'], ['\r', '\\r'], ['\n', '\\n'], ['\l', '\\l'], ['\r\n', '\\r\\n']
+  ];
+  let key = 1;
+  let val = 0;
+
+  if (toRender) {
+    key = 0;
+    val = 1;
+  }
+
+  for (let a = 0; a < special.length; a += 1) {
+    if (special[a][key] === sep) {
+      return special[a][val];
+    }
+  }
+
+  return sep;
 }

@@ -22,7 +22,7 @@ export const cbBtn : CSSResult = css`
     border-radius: 50%;
     background-color: var(--text-colour);
     color: var(--bg-colour);
-    content: var(--false-icon, "\u2717");;
+    content: var(--false-icon, "\u2717");
     display: inline-block;
     // font-size: 0.86rem;
     font-weight: bold;
