@@ -10,16 +10,6 @@ import { IListCtrlItem, UBoolState, UDataType } from "./Igeneral";
    */
   label: string,
   /**
-   * Whether or not this field should be included as a column in the
-   * table
-   */
-  isColumn: boolean,
-  /**
-   * Whether or not this field should be included as a column in the
-   * table
-   */
-  isFilter: boolean,
-  /**
    * If this is not empty, the value of the cell will be linked to
    * the URL held in the field this references
    */
@@ -27,5 +17,16 @@ import { IListCtrlItem, UBoolState, UDataType } from "./Igeneral";
   /**
    * List of option IDs and labels
    */
-  enumList ? : Array<IDbEnum>
+  enumList ? : Array<IDbEnum>,
+  /**
+   * Whether or not this control item is currently active
+   */
+  skip ? : boolean
+}
+
+export interface IHeadConfigInternal extends IHeadConfig {
+  /**
+   * Whether or not this control item is currently active
+   */
+  skip: boolean
 }

@@ -159,10 +159,6 @@ export interface IListCtrlOptionItem {
  */
 export interface  IListCtrlItem {
   /**
-   * Whether or not this control item is currently active
-   */
-  skip: boolean,
-  /**
    * Property name of the field being filtered/sorted
    */
   field: string,
@@ -177,6 +173,16 @@ export interface  IListCtrlItem {
    * * option
    */
   type: UDataType,
+  /**
+   * Whether or not this field should be included as a column in the
+   * table
+   */
+  isColumn: boolean,
+  /**
+   * Whether or not this field should be included as a column in the
+   * table
+   */
+  isFilter: boolean,
   /**
    * Normally, empty values are ignored. This causes only items with
    * empty values to be included in the list
@@ -221,7 +227,15 @@ export interface  IListCtrlItem {
    *
    * -1 = no sorting
    */
-  orderPriority: number
+  orderPriority: number,
+  /**
+   * Whether or not to include this field export file
+   */
+  export: boolean,
+  /**
+   * Order of column in export
+   */
+  exportOrder: number
 }
 
 export type FTabTmpl = (tab : TabAccordion) => TemplateResult;
@@ -390,7 +404,6 @@ export type sanTxtMods = {
    */
   deDupeSpace ? : boolean
 }
-
 
 type valDateTimeMods = {
   /**

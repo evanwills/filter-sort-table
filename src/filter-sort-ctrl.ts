@@ -54,6 +54,12 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
   colName : string = '';
 
   /**
+   * Column heading label
+   */
+  @property({ type: String })
+  label : string = '';
+
+  /**
    * Order in which items are listed
    *
    * * -1 = Decending
@@ -193,6 +199,10 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
       tmp = this.stateData.options
     }
 
+    if (this.label === '') {
+      this.label = this.innerText;
+    }
+
     if (this.dataType === 'option') {
       if (typeof this.options === 'string') {
         this.options = parseOptStr(this.options);
@@ -234,12 +244,12 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
     let ok = false;
     let val = 0;
     this.dataset.subtype2 = '';
-    // console.group('filter-sort-ctrl._handler()')
-    // console.log('this:', this);
-    // console.log('this.dataType:', this.dataType);
-    // console.log('input:', input);
-    // console.log('input.value:', input.value);
-    // console.log('input.dataset.type:', input.dataset.type);
+    console.group('filter-sort-ctrl._handler()')
+    console.log('this:', this);
+    console.log('this.dataType:', this.dataType);
+    console.log('input:', input);
+    console.log('input.value:', input.value);
+    console.log('input.dataset.type:', input.dataset.type);
 
     switch (input.dataset.type) {
       case 'filter':
@@ -268,6 +278,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
         val = (this.dataType === 'number')
           ? parseInt(input.value)
           : isoStrToTime(input.value);
+        // val = parseInt(input.value);
 
         if (this.dataType === 'date') {
           // When filtering on date alone, we want max to
@@ -350,10 +361,10 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
         new Event('change', { bubbles: true, composed: true })
       )
     }
-    // console.log('this:', this)
-    // console.log('this.dataset:', this.dataset)
-    // console.log('this.value:', this.value);
-    // console.groupEnd();
+    console.log('this:', this)
+    console.log('this.dataset:', this.dataset)
+    console.log('this.value:', this.value);
+    console.groupEnd();
   }
 
   private _renderUI(id : string) : TemplateResult {
@@ -445,7 +456,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
     );
 
     return html`
-      <h3 id="${id}--grp-label">Filter and sort: ${this.colName}</h3>
+      <h3 id="${id}--grp-label"><span class="sr-only">Filter and sort:</span> ${this.label}</h3>
       <div role="group" aria-labelledby="${id}--grp-label" class="fields${helpClass}">
         <ul class="fields-list">
           ${fields}

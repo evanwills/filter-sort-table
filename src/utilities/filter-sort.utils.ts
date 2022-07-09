@@ -2,7 +2,11 @@ import { html, TemplateResult } from 'lit';
 // import { customElement, property, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 
-import { UBoolState, FEventHandler, IDbEnum, IListCtrlOptionItem, IListCtrlItem, UDataType, UTabIndex } from '../types/Igeneral';
+import {
+  FEventHandler,
+  IDbEnum, IListCtrlItem, IListCtrlOptionItem, IObjNum, IObjScalarX,
+  UBoolState, UDataType, UTabIndex
+} from '../types/Igeneral';
 
 import { isInt, isNumber } from './validation';
 // import { isoStrToTime } from './sanitise';
@@ -12,8 +16,8 @@ import { UScalarX } from '../types/Igeneral';
 import { IHeadConfig } from '../types/header-config';
 
 /**
- * This file contains a list of pure utility functions to help filter
- * sort controls
+ * This file contains a collection of pure utility functions to help
+ * filter-sort-ctrl & filter-sort-table
  */
 
 
@@ -428,8 +432,6 @@ export const getToggleInput = (
   `;
 }
 
-
-
 /**
  * Get item from an array based on item's ID value matching the
  * supplied ID value
@@ -531,7 +533,7 @@ export const skipFilter = (listCtrl: IHeadConfig) : boolean => {
  * @returns TRUE if item was *NOT* excluded by any of the filters.
  *          FALSE otherwise
  */
-const filterSortFilter = (item : UScalarX, listCtrl: Array<IHeadConfig>) : boolean => {
+const filterSortFilter = (item : IObjScalarX, listCtrl: Array<IHeadConfig>) : boolean => {
   // console.group('filterSortFilter()');
   // console.log('item:', item)
 
@@ -569,6 +571,8 @@ const filterSortFilter = (item : UScalarX, listCtrl: Array<IHeadConfig>) : boole
         break;
 
       case 'number':
+      case 'date':
+      case 'datetime':
         // console.log('filtreing on number')
         if (_type !== 'number') {
           // console.groupEnd(); console.groupEnd();
@@ -660,7 +664,7 @@ const filterSortFilter = (item : UScalarX, listCtrl: Array<IHeadConfig>) : boole
  * @returns TRUE if item was *NOT* excluded by any of the filters.
  *          FALSE otherwise
  */
-const filterSortSort = (items : Array<UScalarX>, listCtrl: Array<IListCtrlItem>) : Array<UScalarX> => {
+const filterSortSort = (items : Array<IObjScalarX>, listCtrl: Array<IListCtrlItem>) : Array<IObjScalarX> => {
   if (listCtrl.length === 0) {
     // Nothing to sort so just return input unchanged
     return items;
@@ -684,8 +688,6 @@ const filterSortSort = (items : Array<UScalarX>, listCtrl: Array<IListCtrlItem>)
       return 0;
     }
   });
-
-  console.log('tmpCtrl:', tmpCtrl);
 
   // We're trying to be immutable so do a shallow clone
   // This function doesn't touch the children so a shallow
@@ -749,10 +751,10 @@ const filterSortSort = (items : Array<UScalarX>, listCtrl: Array<IListCtrlItem>)
  *
  * @returns Filtered & sorted list of items
  */
-export const filterAndSort = (items : Array<UScalarX>, listCtrl : Array<IHeadConfig>) : Array<UScalarX> => {
+export const filterAndSort = (items : Array<IObjScalarX>, listCtrl : Array<IHeadConfig>) : Array<IObjScalarX> => {
   // console.log(items);
   return filterSortSort(
-    items.filter((item : UScalarX) : boolean => filterSortFilter(item, listCtrl)),
+    items.filter((item : IObjScalarX) : boolean => filterSortFilter(item, listCtrl)),
     listCtrl
   );
 }
@@ -880,7 +882,6 @@ export const setSortOrder = (
 
 export const headConfigToListCtrl = (item: IHeadConfig) : IListCtrlItem => {
   return {
-    skip: item.skip,
     field: item.field,
     type: item.type,
     filterOnEmpty: item.filterOnEmpty,
@@ -891,6 +892,188 @@ export const headConfigToListCtrl = (item: IHeadConfig) : IListCtrlItem => {
     options: item.options,
     order: item.order,
     orderByValue: item.orderByValue,
-    orderPriority: item.orderPriority
+    orderPriority: item.orderPriority,
+    export: item.export,
+    exportOrder: item.exportOrder,
+    isColumn: item.isColumn,
+    isFilter: item.isFilter
   }
+}
+
+type IColOrder = {
+  field: string,
+  order: number,
+  index: number
+}
+
+/**
+ * Update column order for all exportable columns
+ *
+ * @param cols List of columns/fields available for export
+ *
+ * @returns
+ */
+export const setExportColOrder = (cols : Array<IHeadConfig>) : Array<IHeadConfig> => {
+  const defaultColOrder : Array<IColOrder> = [];
+
+  // Get the list of columns that will be exported along with their
+  // preset export order and their order withing the list of fields
+  for (let a = 0; a < cols.length; a += 1) {
+    // if (cols[a].export === true) {
+    defaultColOrder.push({
+      field: cols[a].field,
+      order: cols[a].exportOrder,
+      index: a
+    })
+    // }
+  }
+
+  // Sort the list of exportable columns so columns with predefined
+  // export order are list as specified and columns with undefined
+  // export order follow, in the order they are listed in the headers
+  defaultColOrder.sort(
+    (a: IColOrder, b:IColOrder) : number => {
+      if (a.order > -1 && b.order > -1) {
+        if (a.order < b.order) {
+          return -1;
+        } else if (a.order > b.order) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+
+      if (a.order > -1 && b.order === -1) {
+        return -1;
+      } else if (a.order === -1 && b.order > -1) {
+        return 1;
+      } else {
+        // At this point, both a.order & b.order === -1
+
+        if (a.index < b.index) {
+          return -1;
+        } else if (a.index > b.index) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+    }
+  )
+
+  const newOrder : IObjNum = {};
+
+  // Create a map of field names and their column order
+  for (let a = 0; a < defaultColOrder.length; a += 1) {
+    newOrder[defaultColOrder[a].field] = a;
+  }
+
+  // Update the export column order of exportable columns
+  return cols.map(
+    (col : IHeadConfig) : IHeadConfig => {
+      // return (col.export === true && typeof newOrder[col.field] === 'number')
+      return (typeof newOrder[col.field] === 'number')
+        ? {...col, exportOrder: newOrder[col.field]}
+        : col
+    }
+  );
+}
+
+/**
+ * Generate a data URL for export download
+ *
+ * @param data           (Unfiltered) Table data to be exported
+ * @param cols           Column controls
+ * @param colSep         Column separator
+ * @param rowSep         Row separator
+ * @param includeHeaders Whether or not to include column headers
+ * @returns
+ */
+export const getExportDataURL = (
+  data: Array<IObjScalarX>,
+  cols: Array<IHeadConfig>,
+  colSep : string = '\t',
+  rowSep : string = '\n',
+  includeHeaders: boolean = true
+) : string => {
+  /**
+   * List of rows that should be included in the export
+   *
+   * @var tmp
+   */
+  const tmp : Array<IObjScalarX> = filterAndSort(data, cols);
+  /**
+   * List of column controls for exportable columns
+   * @var exportCols
+   */
+  const exportCols : Array<IHeadConfig> = setExportColOrder(cols.filter((col: IHeadConfig) => col.export));
+
+  // Sort the columns so they're in the right order for exporting.
+  exportCols.sort(
+    (a :IHeadConfig, b: IHeadConfig) : number => {
+      if (a.exportOrder < b.exportOrder) {
+        return -1;
+      } else if (a.exportOrder > b.exportOrder) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+  );
+
+  let output = '';
+
+  if (includeHeaders) {
+    // Add column headers
+    let sep = '';
+    for (let a = 0; a < exportCols.length; a += 1) {
+      output += sep + exportCols[a].label;
+      sep = colSep;
+    }
+    output += rowSep;
+  }
+
+  let _rowSep = '';
+  let _colSep = '';
+
+  // Loop through each row
+  for (let a = 0; a < tmp.length; a += 1) {
+    output += _rowSep;
+    for (let b = 0; b < exportCols.length; b += 1) {
+      if (typeof tmp[a][(exportCols[b].field as string)] !== 'undefined') {
+        //
+        let val = tmp[a][(exportCols[b].field as string)];
+
+        switch (exportCols[b].type) {
+          case 'bool':
+            val = (val === true) ? 'Yes' : 'No';
+            break;
+
+          case 'date':
+            console.log('val:', val);
+            val = new Date(val * 1000).toISOString().replace(/T.*$/, '');
+            break;
+
+          case 'datetime':
+            console.log('val:', val);
+            val = new Date(val * 1000).toISOString().replace(/T(.*?)\..*$/, ' $1');
+            break;
+        }
+
+        output += _colSep + val
+        _colSep = colSep;
+      } else {
+        console.group('Bad field name')
+        console.log('row:', tmp[a])
+        console.log('column:', exportCols[b]);
+        console.error('Bad field name: "' + exportCols[b].field + '"')
+        console.groupEnd()
+      }
+    }
+
+    _colSep = '';
+    _rowSep = rowSep;
+  }
+
+  return output;
 }
