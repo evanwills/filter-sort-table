@@ -40,16 +40,10 @@ export class FilterSortTable extends LitElement {
   lastFiltered: string = '';
 
   /**
-   * Character(s) used to separate columns in export
+   * Whether or not user can toggle column visibility
    */
-  @property({ type: String, reflect: true })
-  colSeperator: string = '\t';
-
-  /**
-   * Character(s) used to separate export rows
-   */
-  @property({ type: String, reflect: true })
-  rowSeperator: string = '\n';
+  @property({ type: Boolean })
+  toggleCol : boolean = false;
 
   /**
    * Whether or not to do intialisation stuff
@@ -60,26 +54,32 @@ export class FilterSortTable extends LitElement {
   /**
    * Whether or not omit export column headers
    */
-  @property({ type: Boolean })
-  omitHeaders : boolean = false;
+  @property({ type: String })
+  fileName : string = 'file.tsv';
+
+  /**
+   * Character(s) used to separate columns in export
+   */
+  @property({ type: String, reflect: true })
+  colSep: string = '\t';
+
+  /**
+   * Character(s) used to separate export rows
+   */
+  @property({ type: String, reflect: true })
+  rowSep: string = '\n';
 
   /**
    * Whether or not omit export column headers
    */
-  @property({ type: String })
-  fileName : string = 'file.tsv';
+  @property({ type: Boolean })
+  omitHeaders : boolean = false;
 
   /**
    * Whether or not to do intialisation stuff
    */
   @property({ type: Boolean })
   doInit : boolean = true;
-
-  /**
-   * Whether or not user can toggle column visibility
-   */
-  @property({ type: Boolean })
-  toggleCol : boolean = false;
 
   /**
    * If links are to be handled in a special way this allows for a
@@ -233,7 +233,7 @@ export class FilterSortTable extends LitElement {
       }
 
       if (tmp.type === 'option' && typeof col.dataset.optionlist === 'string' && col.dataset.optionlist !== '') {
-        const enums = col.dataset.optionlist.split(',');
+        const enums = col.dataset.optionlist.split(';');
         const enumList : Array<IDbEnum> = [];
         for (let b = 0; b < enums.length; b += 1) {
           const _enum = enums[b].split(':');
@@ -432,7 +432,7 @@ export class FilterSortTable extends LitElement {
     const link = _event.target as HTMLLinkElement;
     const data = getExportDataURL(
       this.tableData, this.headConfig,
-      this.colSeperator, this.rowSeperator, !this.omitHeaders
+      this.colSep, this.rowSep, !this.omitHeaders
     );
 
     if (data !== '') {
@@ -511,13 +511,13 @@ export class FilterSortTable extends LitElement {
 
     switch (input.dataset.type) {
       case 'column':
-        this.colSeperator = convertSep(input.value, false);
+        this.colSep = convertSep(input.value, false);
         this.lastFiltered = 'column-sep';
         hasChanged = true;
         break;
 
       case 'row':
-        this.rowSeperator = convertSep(input.value, false);
+        this.rowSep = convertSep(input.value, false);
         this.lastFiltered = 'row-sep';
         hasChanged = true;
         break;
@@ -782,7 +782,7 @@ export class FilterSortTable extends LitElement {
               <label for="${this.id}__colSep" class="sep-ctrl__label">Column seperator:</label>
               <input type="text"
                      id="${this.id}__colSep"
-                     value="${convertSep(this.colSeperator, true)}"
+                     value="${convertSep(this.colSep, true)}"
                      maxlength="4"
                      data-type="column"
                      tabindex="${ifDefined(tabIndex)}"
@@ -793,7 +793,7 @@ export class FilterSortTable extends LitElement {
               <label for="${this.id}__rowSep" class="sep-ctrl__label">Row seperator:</label>
               <input type="text"
                      id="${this.id}__rowSep"
-                     value="${convertSep(this.rowSeperator, true)}"
+                     value="${convertSep(this.rowSep, true)}"
                      maxlength="4"
                      data-type="row"
                      tabindex="${ifDefined(tabIndex)}"
