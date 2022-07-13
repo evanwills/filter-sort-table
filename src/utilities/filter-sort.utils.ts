@@ -240,7 +240,10 @@ const filterSortFilter = (item : IObjScalarX, listCtrl: Array<IHeadConfig>) : bo
     // console.group('filterSortFilter() inner');
     // console.log('listCtrl[' + a + ']:', listCtrl[a])
 
-    let _val = item[ctl.field];
+    let _val = (Array.isArray(item[ctl.field]))
+      ? item[ctl.field].length
+      : item[ctl.field];
+    _type = typeof _val;
     // console.log('_type:', _type)
     // console.log('_val:', _val)
 
@@ -254,9 +257,10 @@ const filterSortFilter = (item : IObjScalarX, listCtrl: Array<IHeadConfig>) : bo
         }
         break;
 
-      case 'number':
+        case 'count':
       case 'date':
       case 'datetime':
+        case 'number':
         // console.log('filtreing on number')
         if (_type !== 'number') {
           // console.groupEnd(); console.groupEnd();
@@ -385,6 +389,8 @@ const filterSortSort = (items : Array<IObjScalarX>, listCtrl: Array<IListCtrlIte
     const ctl = next;
     next = tmp.shift();
 
+    console.log('ctl:', ctl)
+
     output.sort((a : UScalarX, b : UScalarX) => {
       const _aType = typeof a[ctl.field];
       const _bType = typeof b[ctl.field];
@@ -400,8 +406,12 @@ const filterSortSort = (items : Array<IObjScalarX>, listCtrl: Array<IListCtrlIte
         console.log('b:', b);
         console.error('type of field in A doesn\'t match type of field in B');
       }
-      const aVal = a[ctl.field];
-      const bVal = b[ctl.field];
+      const aVal = (ctl.type !== 'count')
+        ? a[ctl.field]
+        : a[ctl.field].length;
+      const bVal = (ctl.type !== 'count')
+        ? b[ctl.field]
+        : b[ctl.field].length;
 
       if (aVal < bVal) {
         return ctl.order * -1;
@@ -827,4 +837,18 @@ export const convertSep = (sep : string, toRender: boolean) : string => {
   }
 
   return sep;
+}
+
+export const getFilterData = (listCtrl : Array<IListCtrlItem>) => (field: string) : IListCtrlItem|null => {
+  // console.group(getFilterData)
+  // console.log('field:', field)
+  // console.log('listCtrl:', listCtrl)
+
+  const tmp = listCtrl.filter((item : IListCtrlItem): boolean => item.field === field)
+
+  // console.log('tmp:', tmp)
+  // console.groupEnd()
+  return (tmp.length === 1)
+    ? tmp[0]
+    : null;
 }

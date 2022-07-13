@@ -49,6 +49,12 @@ export class FilterSortTable extends LitElement {
   @property({ type: String, reflect: true })
   lastFiltered: string = '';
 
+  @property({ type: String, reflect: true })
+  lastAction: string = '';
+
+  @property({ type: String, reflect: true })
+  lastActionSub: string = '';
+
   /**
    * Whether or not user can toggle column visibility
    */
@@ -98,7 +104,8 @@ export class FilterSortTable extends LitElement {
   @property({ attribute: false })
   linkHandler : FEventHandler|undefined = undefined;
 
-  static styles = style;
+  @state()
+  value : IListCtrlItem | string = '';
 
   @state()
   cols : Array<IHeadConfig> = [];
@@ -108,6 +115,8 @@ export class FilterSortTable extends LitElement {
   showExtra : boolean = false;
   @state()
   showExport : boolean = false;
+
+  static styles = style;
 
   // ======================================================
   // Start private methods
@@ -127,6 +136,7 @@ export class FilterSortTable extends LitElement {
       this._extractTableData();
     }
 
+    // console.log('headConfig:', this.headConfig)
     this.headConfig = setExportColOrder(
       this.headConfig.map(
         (item : IHeadConfig) : IHeadConfigInternal => {
@@ -375,7 +385,8 @@ export class FilterSortTable extends LitElement {
     // console.log('filter:', filter);
     // console.log('filter.value:', filter.value);
     // console.log('filter.dataset.type:', filter.dataset.type);
-    let resetOrder = false
+    let resetOrder : boolean = false
+    let ok : boolean = false;
 
     this.headConfig = this.headConfig.map(
       (field: IHeadConfig|IHeadConfigInternal) : IHeadConfigInternal => {
@@ -398,7 +409,6 @@ export class FilterSortTable extends LitElement {
               break;
             case 'bool':
               output.bool = filter.bool;
-              output.skip = (output.bool !== 0);
               break;
             case 'option':
               output.options = filter.filteredOptions;
@@ -412,9 +422,9 @@ export class FilterSortTable extends LitElement {
               break;
           }
           // console.log('output:', output);
+          ok = true;
           output.skip = skipFilter(output);
           // console.log('output:', output);
-          this.lastFiltered = filter.colName;
 
           return output;
         } else {
@@ -430,28 +440,16 @@ export class FilterSortTable extends LitElement {
       this.headConfig = setSortOrder(this.headConfig, filter.colName, filter.order);
     }
 
+    if (ok) {
+      this._setValue(filter.colName, 'filter', filter.dataset.subtype2 as string);
+
     this.dispatchEvent(
       new Event('change', { bubbles: true, composed: true })
     );
-    // console.log('this:', this);
-    // console.groupEnd();
-  }
-
-  private _download(_event: Event) : void {
-    // _event.preventDefault();
-    const link = _event.target as HTMLLinkElement;
-    const data = getExportDataURL(
-      this.tableData, this.headConfig,
-      this.colSep, this.rowSep, !this.omitHeaders
-    );
-
-    if (data !== '') {
-      link.href = 'data:application/vnd.ms-excel;charset=utf-8,' + encodeURI(data);
-      link.download = this.fileName;
-      link.target = '_blank';
-
     }
 
+    // console.log('this:', this);
+    // console.groupEnd();
   }
 
   /**
@@ -462,6 +460,7 @@ export class FilterSortTable extends LitElement {
   private _toggleModal(event: Event) : void {
     // _event.preventDefault();
     const btn = event.target as HTMLButtonElement;
+    this.dataset.subType = '';
 
     switch (btn.value) {
       case 'extra':
@@ -478,10 +477,7 @@ export class FilterSortTable extends LitElement {
           this.headConfig, btn.dataset.type as string, btn.value
         );
 
-        this.lastFiltered = btn.dataset.type as string;
-        this.dispatchEvent(
-          new Event('change', { bubbles: true, composed: true })
-        );
+        this._setValue(btn.dataset.type as string, 'export-move', btn.value);
         break;
     }
   }
@@ -509,10 +505,7 @@ export class FilterSortTable extends LitElement {
     });
 
     if (hasChanged) {
-      this.lastFiltered = cb.dataset.type as string;
-      this.dispatchEvent(
-        new Event('change', { bubbles: true, composed: true })
-      );
+      this._setValue(cb.dataset.type as string, 'export-toggle', cb.dataset.type as string);
     }
     console.groupEnd();
   }
@@ -536,12 +529,48 @@ export class FilterSortTable extends LitElement {
     }
 
     if (hasChanged) {
+      this._setValue('', 'separator', input.dataset.type as string);
+    }
+    console.log('this:', this)
+  }
+
+  private _download(_event: Event) : void {
+    // _event.preventDefault();
+    const link = _event.target as HTMLLinkElement;
+    const data = getExportDataURL(
+      this.tableData, this.headConfig,
+      this.colSep, this.rowSep, !this.omitHeaders
+    );
+
+    if (data !== '') {
+      link.href = 'data:application/vnd.ms-excel;charset=utf-8,' + encodeURI(data);
+      link.download = this.fileName;
+      link.target = '_blank';
+
+    }
+  }
+
+  private _setValue(field: string, action: string, last : string) : void {
+    this.lastFiltered = field;
+    this.lastAction = action;
+    this.lastActionSub = last;
+
+    const tmp = this.getLastUpdated(field);
+    this.value = (tmp !== false)
+      ? tmp
+      : '';
+
+    console.group('_setValue()')
+    console.log('this.lastFiltered:', this.lastFiltered)
+    console.log('this.lastAction:', this.lastAction)
+    console.log('this.lastActionSub:', this.lastActionSub)
+    console.log('this.value:', this.value)
+    console.groupEnd()
+
       this.dispatchEvent(
         new Event('change', { bubbles: true, composed: true })
       );
     }
-    console.log('this:', this)
-  }
 
 
   //  END:  Private event handler methods
@@ -610,22 +639,29 @@ export class FilterSortTable extends LitElement {
     const colID = this.id + '--' + col.field
     let value : TemplateResult|string = (col.type === 'date' || col.type === 'datetime')
       ? html`<short-date timestamp="${row[col.field]}"></short-date>`
+      : (col.type === 'count' && Array.isArray(row[col.field]))
+        ? row[col.field].length
       : row[col.field].toString();
 
-    let _class : string|undefined = undefined;
+    if (typeof value === 'string' && value.indexOf('@') > -1) {
+      // Make emails split if required
+      const email = value.split('@', 2)
+      value = html`${email[0]}<wbr>@${email[1]}`;
+    }
+
+    let _class : string = 'cell--' + col.type;
     if (typeof col.urlField === 'string' &&
         col.urlField !== '' &&
         typeof row[col.urlField] === 'string'
     ) {
+      _class += ' cell--has-link';
       value = html`<a href="${row[col.urlField]}" @click=${ifDefined(this.linkHandler)}>${value}</a>`;
-      _class = 'has-link'
-
     }
 
     // console.groupEnd();
     return (colIndex === 0)
-      ? html`<th id="${id}" header="${colID}" class="${ifDefined(_class)}" scope="row">${value}</th>`
-      : html`<td headers="${id} ${colID}" class="${ifDefined(_class)}">${value}</td>`;
+      ? html`<th id="${id}" header="${colID}" class="${_class}" scope="row">${value}</th>`
+      : html`<td headers="${id} ${colID}" class="${_class}">${value}</td>`;
   }
 
   /**
@@ -847,11 +883,18 @@ export class FilterSortTable extends LitElement {
    * @returns A list control object if any columns have been update.
    *          FALSE otherwise
    */
-  getLastUpdated() : IListCtrlItem|false {
+  getLastUpdated(field: string = '') : IListCtrlItem|false {
+    const _field = (field !== '')
+      ? field
+      : this.lastFiltered;
+    console.group('getLastUpdated()');
+    console.log('_field:', _field)
     const output = this.headConfig.filter(
-      (item: IHeadConfig) => item.field === this.lastFiltered
+      (item: IHeadConfig) => item.field === _field
     ).map(headConfigToListCtrl);
 
+    console.log('output:', output)
+    console.groupEnd()
     return (output.length === 1)
       ? output[0]
       : false;
@@ -867,9 +910,14 @@ export class FilterSortTable extends LitElement {
   }
 
   render() {
+    // console.group('render()')
+    // console.log('headConfig:', this.headConfig)
     if (this.doInit === true) {
       this._doInit();
     }
+
+    // console.log('this.tableData:', this.tableData)
+    // console.groupEnd()
 
     let extraClass = (this.nonCols.length > 0)
       ? ' filter-sort__wrap--extra'

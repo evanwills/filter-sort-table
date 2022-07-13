@@ -49,7 +49,11 @@ export const style = css`
     border-top: var(--row-border);
     vertical-align: top;
   }
+  tbody th {
+    text-align: right;
+  }
   a, filter-sort-ctrl {
+    box-sizing: border-box;
     display: inline-block;
     margin: 0;
     padding: 0;
