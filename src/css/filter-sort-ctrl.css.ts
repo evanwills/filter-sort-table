@@ -4,6 +4,8 @@ import { srOnly } from './sr-only.css';
 import { radioList } from './radio-list.css';
 import { cbBtn } from './cb-btn.css';
 import { modal } from './modal.css';
+import { radioSort } from './radio-sort.css';
+import { focusable } from './focusable.css';
 
 export const style : CSSResult = css`
     :host {
@@ -23,7 +25,7 @@ export const style : CSSResult = css`
       --modal-text-colour: #fff;
     }
     ${srOnly}
-    ${modal()}
+    ${modal(40, 40)}
     button:hover {
       cursor: pointer;
     }
@@ -54,56 +56,15 @@ export const style : CSSResult = css`
       top: 50%;
       transform: translateY(-52%);
     }
-    .sort-btn {
-      background-color: var(--text-colour);
-      border: none;
-      color: var(--modal-text-colour);
-      display: block;
-      font-weight: bold;
-      height: 1.25rem;
-      justify-self: end;
-      padding: 0.5rem;
-      width: 1.5rem;
-      position: relative;
-    }
-    .sort-btn::before {
-      content: ">";
-      position: absolute;
-      transform-origin: 100% 50%;
-    }
-    .ascending {
-      align-self: end;
-      border-bottom: 0.05rem solid var(--bg-colour);
-      border-top-left-radius: 1rem;
-      border-top-right-radius: 1rem;
-      grid-area: sort-up;
-      padding: 0.5rem 0.5rem 0.2rem 0.5rem;
-    }
-    .ascending::before {
-      transform: rotate(-90deg) translate(140%, -75%) scaleY(1.75);
-    }
-    .decending {
-      align-self: top;
-      border-bottom-left-radius: 1rem;
-      border-bottom-right-radius: 1rem;
-      border-top: 0.05rem solid var(--bg-colour);
-      grid-area: sort-down;
-      padding: 0.5rem 0.5rem 0.2rem 0.5rem;
-    }
-    .decending::before {
-      transform: rotate(90deg) translate(-35%, 59%) scaleY(1.75);
-    }
     .fields {
       align-self: center;
       display: grid;
-      grid-template-areas: 'fields sort-up'
-                           'fields sort-down';
+      grid-template-areas: 'fields sortCtl';
       grid-template-columns: 1fr 2.5rem;
       width: 100%;
     }
     .fields--help {
-      grid-template-areas: 'fields  sort-up'
-                           'fields sort-down'
+      grid-template-areas: 'fields  sortCtl'
                            ' help      .';
     }
     .fields .fields-list {
@@ -114,6 +75,12 @@ export const style : CSSResult = css`
     }
     .fields li {
       margin-top: 0.5rem;
+    }
+    .radio-sort__wrap {
+      align-self: center;
+      grid-area: sortCtl;
+      justify-self: end;
+      --text-colour: var(--modal-text-colour);
     }
     .filter-label {
       display: inline-block;
@@ -135,8 +102,6 @@ export const style : CSSResult = css`
     .th {
       width: 100%;
     }
-    ${radioList()}
-    ${cbBtn}
 
     .cb-btn__label, .radio-list__wrap, .radio-list__label {
       --bg-colour: var(--over-colour);
@@ -154,4 +119,9 @@ export const style : CSSResult = css`
     .option-list__label {
       flex-grow: 1;
     }
+
+    ${radioList()}
+    ${cbBtn}
+    ${radioSort}
+    ${focusable}
   `;

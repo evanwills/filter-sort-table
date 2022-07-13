@@ -1,4 +1,4 @@
-import { css, CSSResult } from "lit";
+import { css, CSSResult } from 'lit';
 
 export const cbBtn : CSSResult = css`
   .cb-btn__input {
@@ -22,7 +22,7 @@ export const cbBtn : CSSResult = css`
     border-radius: 50%;
     background-color: var(--text-colour);
     color: var(--bg-colour);
-    content: var(--false-icon, "\u2717");
+    content: var(--false-icon, '\u2717');
     display: inline-block;
     // font-size: 0.86rem;
     font-weight: bold;
@@ -47,7 +47,7 @@ export const cbBtn : CSSResult = css`
     background-color: var(--bg-colour);
     border-color: var(--bg-colour);
     color: var(--text-colour);
-    content: var(--true-icon, "\u2713");
+    content: var(--true-icon, '\u2713');
     font-weight: normal;
     text-indent: 0;
   }

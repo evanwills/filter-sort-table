@@ -1,4 +1,4 @@
-import { css, CSSResult } from "lit";
+import { css, CSSResult } from 'lit';
 
 export const radioList = (minWidth: number = 35) : CSSResult => {
   return css`
@@ -87,7 +87,7 @@ export const radioList = (minWidth: number = 35) : CSSResult => {
       border: var(--line-weight-hvy) solid var(--bg-colour);
       border-radius: 50%;
       color: var(--text-colour);
-      content: "\\02713";
+      content: '\u2713';
       display: inline-block;
       font-size: 0.86em;
       height: 1.25em;

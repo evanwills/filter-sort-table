@@ -4,11 +4,12 @@ import { ifDefined } from 'lit/directives/if-defined.js';
 import { repeat } from 'lit/directives/repeat.js'
 
 import { IHeadConfig, IHeadConfigInternal } from './types/header-config'
-import { FEventHandler, IDbEnum, IListCtrlItem, IObjArrStrSimple, IObjScalarX, UScalar } from './types/Igeneral';
+import { FEventHandler, IDbEnum, IListCtrlItem, IObjArrStrSimple, IObjScalarX, UScalar, UTabIndex } from './types/Igeneral';
 
 import { style } from './css/filter-sort-table.css';
 
-import { convertSep, filterAndSort, getDataType, getExportDataURL, getToggleInput, headConfigToListCtrl, moveExportCol, setExportColOrder, setSortOrder, skipFilter, sortExportCols } from './utilities/filter-sort.utils';
+import { convertSep, filterAndSort, getDataType, getExportDataURL, headConfigToListCtrl, moveExportCol, setExportColOrder, setSortOrder, skipFilter, sortExportCols } from './utilities/filter-sort.utils';
+import { getMoveBtns, getToggleInput } from './utilities/filter-sort-render.utils';
 import { isInt, isNumber } from './utilities/validation';
 import { isTrue } from './utilities/sanitise';
 
@@ -33,8 +34,17 @@ export class FilterSortTable extends LitElement {
   @property()
   tableData : Array<IObjScalarX> = [];
 
+  /**
+   * Whether or not to parse inner HTML as Table
+   */
   @property({ type: Boolean })
   html : boolean = false;
+
+  /**
+   * Whether or not to parse inner HTML as Table
+   */
+  @property({ type: String })
+  caption : string = '';
 
   @property({ type: String, reflect: true })
   lastFiltered: string = '';
@@ -359,7 +369,7 @@ export class FilterSortTable extends LitElement {
    */
   private _handler(event: Event) : void {
     const filter = event.target as FilterSortCtrl;
-    console.group('filter-sort-table._handler()')
+    // console.group('filter-sort-table._handler()')
     // console.log('this:', this);
     // console.log('filter.dataType:', filter.dataType);
     // console.log('filter:', filter);
@@ -423,8 +433,8 @@ export class FilterSortTable extends LitElement {
     this.dispatchEvent(
       new Event('change', { bubbles: true, composed: true })
     );
-    console.log('this:', this);
-    console.groupEnd();
+    // console.log('this:', this);
+    // console.groupEnd();
   }
 
   private _download(_event: Event) : void {
@@ -484,6 +494,7 @@ export class FilterSortTable extends LitElement {
   private _toggleExportCol(event: Event) : void {
     const cb = event.target as HTMLInputElement;
     let hasChanged = false;
+    console.group('_toggleExportCol()')
 
     this.headConfig = this.headConfig.map((col: IHeadConfig) : IHeadConfig => {
       if (col.field === cb.dataset.type) {
@@ -503,6 +514,7 @@ export class FilterSortTable extends LitElement {
         new Event('change', { bubbles: true, composed: true })
       );
     }
+    console.groupEnd();
   }
 
   private _updateSep(event: Event) : void {
@@ -548,7 +560,7 @@ export class FilterSortTable extends LitElement {
   private _renderColHead(col : IHeadConfig) : TemplateResult {
     if (col.isFilter === false) {
       return html`
-        <th id="${this.id}--${col.field}">${col.label}</th>
+        <th id="${this.id}--${col.field}" scope="col">${col.label}</th>
       `;
     }
 
@@ -557,7 +569,7 @@ export class FilterSortTable extends LitElement {
       : undefined;
 
     return html`
-      <th id="${this.id}--${col.field}" class="filtered-col">
+      <th id="${this.id}--${col.field}" class="filtered-col" scope="col">
         <filter-sort-ctrl colname="${col.field}"
                           label="${col.label}"
                           dataType="${col.type}"
@@ -601,7 +613,10 @@ export class FilterSortTable extends LitElement {
       : row[col.field].toString();
 
     let _class : string|undefined = undefined;
-    if (typeof col.urlField === 'string' && col.urlField !== '' && typeof row[col.urlField] === 'string') {
+    if (typeof col.urlField === 'string' &&
+        col.urlField !== '' &&
+        typeof row[col.urlField] === 'string'
+    ) {
       value = html`<a href="${row[col.urlField]}" @click=${ifDefined(this.linkHandler)}>${value}</a>`;
       _class = 'has-link'
 
@@ -609,7 +624,7 @@ export class FilterSortTable extends LitElement {
 
     // console.groupEnd();
     return (colIndex === 0)
-      ? html`<th id="${id}" header="${colID}" class="${ifDefined(_class)}">${value}</th>`
+      ? html`<th id="${id}" header="${colID}" class="${ifDefined(_class)}" scope="row">${value}</th>`
       : html`<td headers="${id} ${colID}" class="${ifDefined(_class)}">${value}</td>`;
   }
 
@@ -700,7 +715,7 @@ export class FilterSortTable extends LitElement {
     `;
   }
 
-  private _renderExportColCtrl = (tabIndex: number|undefined) => (col: IHeadConfig) : TemplateResult => {
+  private _renderExportColCtrl = (tabIndex: UTabIndex, count: number) => (col: IHeadConfig, index: number) : TemplateResult => {
      getToggleInput(
       this.id, col.field, col.export,
       'Include ' + col.label, 'Omit ' + col.label,
@@ -721,7 +736,7 @@ export class FilterSortTable extends LitElement {
            @change=${this._toggleExportCol}
           />
           <label
-            for="${this.id}__${col.label}"
+            for="${this.id}__${col.field}"
             class="cb-btn__label"
             title="${col.label}"
           >${(col.export)
@@ -729,20 +744,14 @@ export class FilterSortTable extends LitElement {
               : 'Omit ' + col.label
           }</label>
         </span>
-        <button value="up"
-                data-type="${col.field}"
-                class="export-up focusable"
-                tabindex="${ifDefined(tabIndex)}"
-               @click=${this._toggleModal}>
-          Up
-        </button>
-        <button value="down"
-                data-type="${col.field}"
-                class="export-down focusable"
-                tabindex="${ifDefined(tabIndex)}"
-               @click=${this._toggleModal}>
-          Down
-        </button>
+        ${getMoveBtns(
+          col.field,
+          col.label,
+          (index === 0),
+          (index === (count - 1)),
+          this._toggleModal,
+          tabIndex
+        )}
       </li>
   `;
   }
@@ -803,7 +812,7 @@ export class FilterSortTable extends LitElement {
             ${repeat(
               cols,
               (col : IHeadConfig) => col.field,
-              this._renderExportColCtrl(tabIndex)
+              this._renderExportColCtrl(tabIndex, cols.length)
             )}
           </ul>
         </div>
@@ -878,6 +887,10 @@ export class FilterSortTable extends LitElement {
           ${this._renderExport()}
         </div>
         <table>
+          ${(this.caption !== '')
+            ? html`<caption>${this.caption}</caption>`
+            : ''
+          }
           <thead>
             <tr>
               ${this.cols.map(

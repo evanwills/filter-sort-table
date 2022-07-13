@@ -1,6 +1,8 @@
 import { css } from "lit";
 import { cbBtn } from "./cb-btn.css";
+import { focusable } from "./focusable.css";
 import { modal } from "./modal.css";
+import { moveBtn } from "./move-btn.css";
 import { srOnly } from "./sr-only.css";
 // import { srOnly } from "./sr-only.css";
 
@@ -14,6 +16,7 @@ export const style = css`
     --cell-v-padding: 0.5rem;
     --cell-h-padding: 0.75rem;
     --text-colour: #000;
+    --bg-colour: #fff;
     --close-btn-bg-colour: #000;
     --close-btn-text-colour: #fff;
     --font-family: Arial, Helvetica, sans-serif;
@@ -61,9 +64,10 @@ export const style = css`
   .has-link {
     padding: 0;
   }
-  .filter-sort__wrap--extra, .filter-sort__wrap--export {
-    padding-right: 2.5rem;
+  .filter-sort__wrap {
     position: relative;
+    display: inline-block;
+    margin: 0 auto;
   }
   .wrap > h2 {
     box-sizing: border-box;
@@ -94,6 +98,8 @@ export const style = css`
     position: sticky;
     top: 0;
     float: right;
+    padding-left: 0.5rem;
+    width: 2rem;
   }
   .extra__list__wrap {
     position: relative;
@@ -135,12 +141,13 @@ export const style = css`
     border: var(--row-border);
     font-family: var(--font-family);
     font-weight: bold;
+    position: relative;
     text-decoration: none;
     text-transform: uppercase;
-    transform: rotate(90deg);
-    transform-origin: left bottom;
+    transform: rotate(90deg) translate(1rem, -5rem);
+    transform-origin: left top;
     width: auto;
-    margin-top: -1rem;
+    margin-left: -3rem;
   }
   .download__wrap {
     left: 0;
@@ -159,16 +166,11 @@ export const style = css`
     text-decoration: underline;
   }
 
-  .focusable:focus {
-    outline: #44f solid 0.15rem;
-    outline-offset: 0.1rem;
-  }
-
   .export-ctrl {
     display: grid;
     grid-template-areas: "toggle up"
                          "toggle down";
-    grid-template-columns: 1fr 3rem;
+    grid-template-columns: 1fr 1.5rem;
     grid-template-rows: auto auto;
   }
   .cb-btn__wrap {
@@ -191,8 +193,9 @@ export const style = css`
 
   }
 
-
   ${srOnly}
   ${modal(maxHeight, 40)}
   ${cbBtn}
+  ${moveBtn}
+  ${focusable}
 `;

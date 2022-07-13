@@ -9,7 +9,8 @@ import { style } from './css/filter-sort-ctrl.css';
 // import { isInt, isNumber, isStr } from './utilities/validation';
 import { isoStrToTime } from './utilities/sanitise';
 import { getBoolState } from './utilities/general.utils';
-import { getInput, getOptMode, getOptStr, getUpdatedFilterOpt, getToggleInput, parseOptStr, getDataType } from './utilities/filter-sort.utils';
+import { getOptMode, getOptStr, getUpdatedFilterOpt, parseOptStr, getDataType } from './utilities/filter-sort.utils';
+import { getInput, getSortBtns, getToggleInput } from './utilities/filter-sort-render.utils';
 import { IFilterSortCtrl, UDataType } from './types/IFilterSortCtrl';
 
 
@@ -244,12 +245,12 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
     let ok = false;
     let val = 0;
     this.dataset.subtype2 = '';
-    console.group('filter-sort-ctrl._handler()')
-    console.log('this:', this);
-    console.log('this.dataType:', this.dataType);
-    console.log('input:', input);
-    console.log('input.value:', input.value);
-    console.log('input.dataset.type:', input.dataset.type);
+    // console.group('filter-sort-ctrl._handler()')
+    // console.log('this:', this);
+    // console.log('this.dataType:', this.dataType);
+    // console.log('input:', input);
+    // console.log('input.value:', input.value);
+    // console.log('input.dataset.type:', input.dataset.type);
 
     switch (input.dataset.type) {
       case 'filter':
@@ -309,30 +310,23 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
       case 'option':
         this.filteredOptions = getUpdatedFilterOpt(this.filteredOptions, input);
         const tmpO = getOptStr(this.filteredOptions);
-          if (this.oldOpt !== tmpO) {
-            this.value = tmpO;
-            ok = true;
-            this.dataset.subtype2 = 'option';
-            this.oldOpt = tmpO;
-          }
+        if (this.oldOpt !== tmpO) {
+          this.value = tmpO;
+          ok = true;
+          this.dataset.subtype2 = 'option';
+          this.oldOpt = tmpO;
+        }
         break;
 
-      case 'up':
-        this.order = (this.order !== 1)
-          ? 1
-          : 0;
-        this.dataset.subtype2 = 'order';
-        this.value = this.order;
-        ok = true;
-        break;
+      case 'sort':
+        const tmpS = getBoolState(input.value);
 
-      case 'down':
-        this.order = (this.order !== -1)
-          ? -1
-          : 0;
-        this.dataset.subtype2 = 'order';
-        this.value = this.order;
-        ok = true;
+        if (this.order !== tmpS) {
+          this.order = tmpS;
+          this.value = tmpS;
+          this.dataset.subtype2 = 'order';
+          ok = true;
+        }
         break;
 
       case 'toggle-min-max':
@@ -361,10 +355,10 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
         new Event('change', { bubbles: true, composed: true })
       )
     }
-    console.log('this:', this)
-    console.log('this.dataset:', this.dataset)
-    console.log('this.value:', this.value);
-    console.groupEnd();
+    // console.log('this:', this)
+    // console.log('this.dataset:', this.dataset)
+    // console.log('this.value:', this.value);
+    // console.groupEnd();
   }
 
   private _renderUI(id : string) : TemplateResult {
@@ -462,18 +456,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
           ${fields}
         </ul>
         ${helpBlock}
-        <button class="sort-btn ascending${ascClass}"
-                data-type="up"
-                tabindex="${ifDefined(tabInd)}"
-              @click=${this._handler}>
-          <span class="sr-only">${ascLabel}</span>
-        </button>
-        <button class="sort-btn decending${decClass}"
-                data-type="down"
-                tabindex="${ifDefined(tabInd)}"
-              @click=${this._handler}>
-          <span class="sr-only">${decLabel}</span>
-        </button>
+        ${getSortBtns('sort', this.order, this._handler, undefined, this.label, tabInd)}
       </div>`;
   }
 
