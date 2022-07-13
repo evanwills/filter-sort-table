@@ -378,35 +378,27 @@ const filterSortSort = (items : Array<IObjScalarX>, listCtrl: Array<IListCtrlIte
   // clone will be fine.
   const output = [...items];
 
-  output.sort((a : UScalarX, b : UScalarX) => {
-    const tmp = [...tmpCtrl];
-    let next = tmp.shift();
+  const tmp = [...tmpCtrl];
+  let next = tmp.shift();
 
-    while (typeof next !== 'undefined') {
-      const ctl = next;
-      next = tmp.shift();
+  while (typeof next !== 'undefined') {
+    const ctl = next;
+    next = tmp.shift();
+
+    output.sort((a : UScalarX, b : UScalarX) => {
       const _aType = typeof a[ctl.field];
       const _bType = typeof b[ctl.field];
-
-      if (ctl.order === 0) {
-        // Sort order is set to Ignore
-        continue;
-      }
 
       if (_aType === 'undefined' || _bType === 'undefined') {
         console.log('ctl:', ctl)
         console.log('a:', a)
         console.log('b:', b)
-        console.error('one of the items didn\'t have the right field')
-
-        continue;
+        console.error('one of the items didn\'t have the right field');
       } else if (_aType !== _bType) {
         console.log('ctl:', ctl);
         console.log('a:', a);
         console.log('b:', b);
         console.error('type of field in A doesn\'t match type of field in B');
-
-        continue;
       }
       const aVal = a[ctl.field];
       const bVal = b[ctl.field];
@@ -416,13 +408,11 @@ const filterSortSort = (items : Array<IObjScalarX>, listCtrl: Array<IListCtrlIte
       } else if (aVal > bVal) {
         return ctl.order;
       }
-      // everything is the same, so we'll continue on to the next
-      // list control item
-    }
 
-    // Looks like everything matched so this one stays put
-    return 0
-  });
+      // Looks like everything matched so this one stays put
+      return 0
+    });
+  }
 
   return output;
 }
@@ -806,6 +796,18 @@ export const moveExportCol = (
   );
 }
 
+/**
+ * The the character for the supplied usecase
+ *
+ * @param sep      Separator character(s) used to separate columns or
+ *                 rows in export text file.
+ * @param toRender Whether or not characters are to be used to render
+ *                 in the UI or to be stored in state (and use in
+ *                 export text file)
+ *
+ * @returns A string representing separator character(s) for
+ *          appropriate use case
+ */
 export const convertSep = (sep : string, toRender: boolean) : string => {
   const special = [
     ['\t', '\\t'], ['\r', '\\r'], ['\n', '\\n'], ['\l', '\\l'], ['\r\n', '\\r\\n']

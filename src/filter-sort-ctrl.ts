@@ -171,7 +171,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
 
   // private oldMin : string = '';
   // private oldMax : string = '';
-  private oldOpt : string = '';
+  // private oldOpt : string = '';
   public filteredOptions : Array<IListCtrlOptionItem> = [];
 
   static styles : CSSResult = style
@@ -310,12 +310,10 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
       case 'option':
         this.filteredOptions = getUpdatedFilterOpt(this.filteredOptions, input);
         const tmpO = getOptStr(this.filteredOptions);
-        if (this.oldOpt !== tmpO) {
-          this.value = tmpO;
-          ok = true;
-          this.dataset.subtype2 = 'option';
-          this.oldOpt = tmpO;
-        }
+        this.value = tmpO;
+        ok = true;
+        this.dataset.subtype2 = 'option';
+        // this.oldOpt = tmpO;
         break;
 
       case 'sort':
@@ -365,17 +363,6 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
     const tabInd = this._getTabInd();
     let helpBlock : TemplateResult|string = '';
     let helpClass : string = '';
-    let decClass = '';
-    let decLabel : string = 'Decending';
-    let ascClass = '';
-    let ascLabel : string = 'Ascending';
-    if (this.order < 0) {
-      decClass = ' decending-true';
-      decLabel = 'Sorted by decending Order'
-    } else if (this.order > 0) {
-      decClass = ' ascending-true';
-      decLabel = 'Sorted by ascending Order'
-    }
     let toggleMinMax = false;
     let toggleFullDate = false;
     let allowMinMax = false;
