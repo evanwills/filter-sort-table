@@ -534,7 +534,7 @@ export class FilterSortTable extends LitElement {
   private _renderColHead(col : IHeadConfig) : TemplateResult {
     if (col.isFilter === false) {
       return html`
-        <th id="${this.id}--${col.field}" scope="col">${col.label}</th>
+        <th id="${this.id}--${col.field}" scope="col" class="no-filter"><span class="filter-sort-ctrl">${col.label}</span></th>
       `;
     }
 
@@ -682,7 +682,6 @@ export class FilterSortTable extends LitElement {
                     ${col.label}
                   </filter-sort-ctrl>
                 </li>`
-
           )}
         </ul>
 

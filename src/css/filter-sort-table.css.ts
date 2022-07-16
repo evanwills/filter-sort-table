@@ -24,15 +24,36 @@ export const style = css`
     --export-text-colour: #fff;
     --true-icon: "\u2713";
     --false-icon: "\u2717";
+    --sticky-v-offset: 0;
   }
   table-sort-ctrl {
     --txt-colour: var(--txt-colour);
     --bg-colour: var(--bg-colour);
   }
+  /*
+  filter-sort-ctrl {
+    border-right: var(--col-border);
+    border-bottom: var(--row-border);
+  }
+  .filter-sort-ctrl {
+    border-right: var(--col-border);
+    border-bottom: var(--row-border);
+    padding: var(--cell-v-padding) var(--cell-h-padding);
+  }
+  thead tr th:first-child filter-sort-ctrl,
+  thead tr th:first-child .filter-sort-ctrl {
+    border-left: none;
+  }
+  thead tr th:last-child filter-sort-ctrl,
+  thead tr th:last-child .filter-sort-ctrl {
+    border-right: none;
+  }
+  */
 
   table {
     border: var(--table-border);
     border-collapse: collapse;
+    position: relative;
   }
   th {
     border-left: var(--col-border);
@@ -47,8 +68,18 @@ export const style = css`
     padding: var(--cell-v-padding) var(--cell-h-padding);
   }
   thead {
+    background-color: var(--bg-colour);
+    position: sticky;
+    top: 0;
     vertical-align: bottom;
+    z-index: 10;
   }
+  /*
+  thead th {
+    border: none;
+    border-bottom: 0.1rem solid #000;
+  }
+  */
   tbody th, tbody td {
     border-left: var(--col-border);
     border-top: var(--row-border);
@@ -56,6 +87,11 @@ export const style = css`
   }
   tbody th {
     text-align: left;
+  }
+  tbody > tr:hover > th,
+  tbody > tr:hover > td {
+    background-color: #f0f0f0;
+    transition: background-color ease-in-out 0.1s;
   }
   a, filter-sort-ctrl {
     box-sizing: border-box;
@@ -99,7 +135,7 @@ export const style = css`
     overflow-y: auto;
     padding: 1rem 0 0 0;
     position: relative;
-    z-index: 100;
+    z-index: 20;
   }
   .wrap li {
     padding: var(--cell-v-padding) 1rem;
@@ -115,8 +151,9 @@ export const style = css`
     top: 0;
     float: right;
     padding-left: 0.5rem;
-    padding-top: 3rem;
+    padding-top: var(--sticky-v-offset);
     width: 2rem;
+    z-index: 100;
   }
   .extra__list__wrap {
     position: relative;
@@ -208,7 +245,11 @@ export const style = css`
   .sep-ctrl__label {
     width: 9.5rem;
     font-weight: bold;
-
+  }
+  .no-filter {
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0.55rem;
   }
 
   ${srOnly}
