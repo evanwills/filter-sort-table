@@ -15,6 +15,10 @@ import { IListCtrlItem, UBoolState, UDataType } from "./Igeneral";
    */
   urlField ? : string,
   /**
+   * Whether or not to use the event handler for this link
+   */
+  useHandler ? : boolean,
+  /**
    * List of option IDs and labels
    */
   enumList ? : Array<IDbEnum>,

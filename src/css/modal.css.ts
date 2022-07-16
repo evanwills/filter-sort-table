@@ -4,7 +4,7 @@ export const modal = (maxHeight: number = 35, maxWidth: number = 35) => css`
   .wrap {
     background-color: var(--bg-colour);
     box-sizing: border-box;
-    color: var(--modal-text-colour);
+    color: var(--modal-txt-colour);
     /* height: calc(100% - 2rem); */
     left: 50%;
     max-height: ${maxHeight}rem;

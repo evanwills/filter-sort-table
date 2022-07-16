@@ -10,7 +10,7 @@ export const cbBtn : CSSResult = css`
   }
   .cb-btn__label {
     display: block;
-    border: var(--line-weight-hvy) solid var(--text-colour);
+    border: var(--line-weight-hvy) solid;
     max-width: 24rem;
     padding: 0.2rem 1.75rem;
     position: relative;
@@ -18,9 +18,9 @@ export const cbBtn : CSSResult = css`
     width: auto;
   }
   .cb-btn__label::before {
-    border: var(--line-weight-hvy) solid var(--text-colour);
+    border: var(--line-weight-hvy) solid;
     border-radius: 50%;
-    background-color: var(--text-colour);
+    background-color: var(--txt-colour);
     color: var(--bg-colour);
     content: var(--false-icon, '\u2717');
     display: inline-block;
@@ -36,7 +36,7 @@ export const cbBtn : CSSResult = css`
     // text-indent: 0.05rem;
   }
   .cb-btn__input:checked + .cb-btn__label {
-    background-color: var(--text-colour);
+    background-color: var(--txt-colour);
     color: var(--bg-colour);
   }
   .cb-btn__input:focus + .cb-btn__label {
@@ -46,7 +46,7 @@ export const cbBtn : CSSResult = css`
   .cb-btn__input:checked + .cb-btn__label::before {
     background-color: var(--bg-colour);
     border-color: var(--bg-colour);
-    color: var(--text-colour);
+    color: var(--txt-colour);
     content: var(--true-icon, '\u2713');
     font-weight: normal;
     text-indent: 0;

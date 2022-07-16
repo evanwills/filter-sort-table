@@ -15,7 +15,7 @@ export const style = css`
     --col-border: 0.05rem solid #000;
     --cell-v-padding: 0.5rem;
     --cell-h-padding: 0.75rem;
-    --text-colour: #000;
+    --txt-colour: #000;
     --bg-colour: #fff;
     --close-btn-bg-colour: #000;
     --close-btn-text-colour: #fff;
@@ -25,6 +25,10 @@ export const style = css`
     --true-icon: "\u2713";
     --false-icon: "\u2717";
   }
+  table-sort-ctrl {
+    --txt-colour: var(--txt-colour);
+    --bg-colour: var(--bg-colour);
+  }
 
   table {
     border: var(--table-border);
@@ -33,12 +37,13 @@ export const style = css`
   th {
     border-left: var(--col-border);
     position: relative;
+    color: var(--txt-colour);
   }
   th:first-child {
     border-left: none;
   }
   th, td {
-    color: var(--text-colour);
+    color: var(--txt-colour);
     padding: var(--cell-v-padding) var(--cell-h-padding);
   }
   thead {
@@ -50,7 +55,7 @@ export const style = css`
     vertical-align: top;
   }
   tbody th {
-    text-align: right;
+    text-align: left;
   }
   a, filter-sort-ctrl {
     box-sizing: border-box;
@@ -61,12 +66,19 @@ export const style = css`
   }
   a {
     padding: var(--cell-v-padding) var(--cell-h-padding);
+    color: var(--txt-colour);
   }
   .filtered-col {
     padding: 0;
   }
-  .has-link {
+  .cell--has-link {
     padding: 0;
+  }
+  .cell--number, .cell--count {
+    text-align: right;
+  }
+  .cell--date, .cell--datetime {
+    text-align: center;
   }
   .filter-sort__wrap {
     position: relative;
@@ -103,6 +115,7 @@ export const style = css`
     top: 0;
     float: right;
     padding-left: 0.5rem;
+    padding-top: 3rem;
     width: 2rem;
   }
   .extra__list__wrap {
@@ -121,6 +134,7 @@ export const style = css`
     z-index: 1000;
   }
   .extra-open {
+    color: var(--txt-colour)
     cursor: pointer;
     display: block;
     width: 2rem;

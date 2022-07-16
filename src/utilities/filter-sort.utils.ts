@@ -9,7 +9,9 @@ import { isNumber } from './validation';
 // import { isoStrToTime } from './sanitise';
 import { getBoolState } from './general.utils';
 import { UScalarX } from '../types/Igeneral';
-import { IHeadConfig } from '../types/header-config';
+import { IHeadConfig, IHeadConfigInternal } from '../types/header-config';
+import { IFilterSortCtrlData } from '../types/IFilterSortCtrl';
+import { FilterSortCtrl } from '../filter-sort-ctrl';
 
 /**
  * This file contains a collection of pure utility functions to help
@@ -240,9 +242,14 @@ const filterSortFilter = (item : IObjScalarX, listCtrl: Array<IHeadConfig>) : bo
     // console.group('filterSortFilter() inner');
     // console.log('listCtrl[' + a + ']:', listCtrl[a])
 
-    let _val = (Array.isArray(item[ctl.field]))
-      ? item[ctl.field].length
-      : item[ctl.field];
+    let _val : UScalarX = '';
+
+    if (Array.isArray(item[ctl.field])) {
+      _val = (item[ctl.field] as Array<any>).length
+    } else {
+      _val = item[ctl.field]
+    }
+
     _type = typeof _val;
     // console.log('_type:', _type)
     // console.log('_val:', _val)
@@ -359,7 +366,7 @@ const filterSortSort = (items : Array<IObjScalarX>, listCtrl: Array<IListCtrlIte
   }
 
   // Remove any controls that are set to ignore when sorting
-  const tmpCtrl = listCtrl.filter(
+  const tmpCtrl : Array<IListCtrlItem> = listCtrl.filter(
     (ctrlItem : IListCtrlItem) : boolean => {
       return (ctrlItem.order !== 0 && ctrlItem.orderPriority > -1);
     }
@@ -391,9 +398,10 @@ const filterSortSort = (items : Array<IObjScalarX>, listCtrl: Array<IListCtrlIte
 
     console.log('ctl:', ctl)
 
-    output.sort((a : UScalarX, b : UScalarX) => {
-      const _aType = typeof a[ctl.field];
-      const _bType = typeof b[ctl.field];
+    output.sort((a : IObjScalarX, b : IObjScalarX) => {
+      const prop = ctl.field;
+      const _aType = typeof a[prop];
+      const _bType = typeof b[prop];
 
       if (_aType === 'undefined' || _bType === 'undefined') {
         console.log('ctl:', ctl)
@@ -407,11 +415,11 @@ const filterSortSort = (items : Array<IObjScalarX>, listCtrl: Array<IListCtrlIte
         console.error('type of field in A doesn\'t match type of field in B');
       }
       const aVal = (ctl.type !== 'count')
-        ? a[ctl.field]
-        : a[ctl.field].length;
+        ? a[prop]
+        : (a[prop] as Array<any>).length;
       const bVal = (ctl.type !== 'count')
-        ? b[ctl.field]
-        : b[ctl.field].length;
+        ? b[prop]
+        : (b[prop] as Array<any>).length;
 
       if (aVal < bVal) {
         return ctl.order * -1;
@@ -451,7 +459,7 @@ export const filterAndSort = (items : Array<IObjScalarX>, listCtrl : Array<IHead
  * @returns Valid data type
  */
 export const getDataType = (input : string) : UDataType => {
-  const _input = input.toLowerCase();
+  const _input = input.toLowerCase().trim();
 
   switch (_input) {
     case 'text':
@@ -470,6 +478,111 @@ export const getDataType = (input : string) : UDataType => {
 }
 
 /**
+ * Extract data from Filter Sort Control component into a simple
+ * object that can be used in pure functions.
+ *
+ * @param filter Filter Sort Control web component object
+ *
+ * @returns Useful data from Filter Sort Control component in a
+ *          simple object
+ */
+export const getFilterSortCtrlData = (filter: FilterSortCtrl) : IFilterSortCtrlData => {
+  return {
+    colName: filter.colName,
+    changed: (typeof filter.dataset.subtype2 == 'string')
+      ? filter.dataset.subtype2
+      : '',
+    order: filter.order,
+    filter: filter.filter,
+    min: filter.min,
+    max: filter.max,
+    bool: filter.bool,
+    options: filter.filteredOptions,
+    isColumn: filter.isColumn
+  }
+}
+
+/**
+ * Update list of filters based on values from user input.
+ *
+ * @param filters   List of all filters for table
+ * @param ctrl      Data from Filter Sort Control change event
+ * @param toggleCol Whether or not to allow toggling column visiblity
+ *
+ * @returns Update list of filters
+ */
+export const updateFilters = (
+  filters : Array<IHeadConfig|IHeadConfigInternal>,
+  ctrl : IFilterSortCtrlData,
+  toggleCol: boolean
+) : Array<IHeadConfigInternal> => {
+  let resetOrder : boolean = false;
+
+  let output : Array<IHeadConfigInternal> = filters.map(
+    (field: IHeadConfig|IHeadConfigInternal) : IHeadConfigInternal => {
+      if (ctrl.colName === field.field) {
+        const output : IHeadConfigInternal = { ...field, skip: true }
+
+        switch(ctrl.changed) {
+          case 'order':
+            resetOrder = true;
+            output.order = ctrl.order;
+            break;
+
+          case 'filter':
+            output.filter = ctrl.filter;
+            break;
+
+          case 'min':
+            output.min = ctrl.min;
+            break;
+
+          case 'max':
+            output.max = ctrl.max;
+            break;
+
+          case 'bool':
+            output.bool = ctrl.bool;
+            break;
+
+          case 'option':
+            output.options = ctrl.options;
+            break;
+
+          case 'isCol':
+            // console.log('output.isColumn (before):', output.isColumn)
+            if (toggleCol) {
+              output.isColumn = ctrl.isColumn;
+            }
+            // console.log('output.isColumn (after):', output.isColumn)
+            break;
+
+          default:
+            console.error(
+              'Could not work out what to update using "' +
+              ctrl.changed + '"'
+            );
+        }
+        // console.log('output:', output);
+        output.skip = skipFilter(output);
+        // console.log('output:', output);
+
+        return output;
+      } else {
+        return (typeof field.skip === 'boolean')
+          ? field as IHeadConfigInternal
+          : { ...field, skip: skipFilter(field) };
+      }
+    }
+  );
+
+  if (resetOrder) {
+    output = setSortOrderHC(output, ctrl.colName, ctrl.order);
+  }
+  return output;
+}
+
+/**
  * Update the sort order for any fields affected by the lates sort
  * order change
  *
@@ -480,8 +593,8 @@ export const getDataType = (input : string) : UDataType => {
  * @returns Updated sort order & priority for fields.
  */
 export const setSortOrder = (
-  filters : Array<IHeadConfig>, field : string, order : UBoolState
-) : Array<IHeadConfig> => {
+  filters : Array<IListCtrlItem>, field : string, order : UBoolState
+) : Array<IListCtrlItem> => {
   /**
    * Number of fields currently being sorted on.
    */
@@ -504,7 +617,7 @@ export const setSortOrder = (
   // Then to update the sort priority for previously sorted fields
   // (where appropriate) and to set the most recently updated field
   // to the highest priority.
-  return filters.map((item : IHeadConfig) : IHeadConfig => {
+  return filters.map((item : IListCtrlItem) : IListCtrlItem => {
     if (item.field === field) {
       // Record the current priority so higher priority fields can
       // be decrmented
@@ -526,7 +639,7 @@ export const setSortOrder = (
 
       return item;
     }
-  }).map((item: IHeadConfig) : IHeadConfig => {
+  }).map((item: IListCtrlItem) : IListCtrlItem => {
     if (item.field === field && order !== 0) {
       // Make the changed field the highest priority
       item.orderPriority = c;
@@ -543,6 +656,50 @@ export const setSortOrder = (
   });
 }
 
+
+/**
+ * Update the sort order for any fields affected by the lates sort
+ * order change
+ *
+ * @param filters List of filters
+ * @param field   Name of field that has changed
+ * @param order   New order for field
+ *
+ * @returns Updated sort order & priority for fields.
+ */
+ export const setSortOrderHC = (
+  filters : Array<IHeadConfigInternal>, field : string, order : UBoolState
+) : Array<IHeadConfigInternal> => {
+  const tmp : Array<IListCtrlItem> = setSortOrder(
+    filters.map(headConfigToListCtrl),
+    field,
+    order
+  );
+
+  return filters.map(
+    (item: IHeadConfigInternal, index : number) : IHeadConfigInternal => {
+      if (typeof tmp[index] !== undefined && tmp[index].field === item.field) {
+        return {
+          ...item,
+          ...tmp[index]
+        };
+      } else {
+        console.error('Updated filter could not be reintegrated')
+        console.log('item:', item)
+        console.log('tmp:', tmp)
+        return item;
+      }
+    }
+  );
+}
+
+/**
+ * Convert a IHeadConfig item to a IListCtrlItem
+ *
+ * @param item Head config item
+ *
+ * @returns
+ */
 export const headConfigToListCtrl = (item: IHeadConfig) : IListCtrlItem => {
   return {
     field: item.field,

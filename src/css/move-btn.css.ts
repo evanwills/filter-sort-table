@@ -16,8 +16,8 @@ export const moveBtn = css`
     width: 1.5rem;
   }
   .move-btn::before {
-    border: 0.1rem solid var(--text-colour);
-    color: var(--text-colour);
+    border: 0.1rem solid var(--txt-colour);
+    color: var(--txt-colour);
     background-color: var(--bg-colour);
     border-radius: 1rem;
     display: block;

@@ -8,7 +8,7 @@ import { FEventHandler, IDbEnum, IListCtrlItem, IObjArrStrSimple, IObjScalarX, U
 
 import { style } from './css/filter-sort-table.css';
 
-import { convertSep, filterAndSort, getDataType, getExportDataURL, headConfigToListCtrl, moveExportCol, setExportColOrder, setSortOrder, skipFilter, sortExportCols } from './utilities/filter-sort.utils';
+import { convertSep, filterAndSort, getDataType, getExportDataURL, getFilterSortCtrlData, headConfigToListCtrl, moveExportCol, setExportColOrder, skipFilter, sortExportCols, updateFilters } from './utilities/filter-sort.utils';
 import { getMoveBtns, getToggleInput } from './utilities/filter-sort-render.utils';
 import { isInt, isNumber } from './utilities/validation';
 import { isTrue } from './utilities/sanitise';
@@ -378,75 +378,20 @@ export class FilterSortTable extends LitElement {
    * @param event User triggered change event
    */
   private _handler(event: Event) : void {
-    const filter = event.target as FilterSortCtrl;
+    const tmp = event.target as FilterSortCtrl;
+    const filter = getFilterSortCtrlData(tmp);
     // console.group('filter-sort-table._handler()')
     // console.log('this:', this);
     // console.log('filter.dataType:', filter.dataType);
     // console.log('filter:', filter);
     // console.log('filter.value:', filter.value);
     // console.log('filter.dataset.type:', filter.dataset.type);
-    let resetOrder : boolean = false
-    let ok : boolean = false;
 
-    this.headConfig = this.headConfig.map(
-      (field: IHeadConfig|IHeadConfigInternal) : IHeadConfigInternal => {
-        if (filter.colName === field.field) {
-          const output : IHeadConfigInternal = { ...field, skip: true }
-
-          switch(filter.dataset.subtype2) {
-            case 'order':
-              resetOrder = true;
-              output.order = filter.order;
-              break;
-            case 'filter':
-              output.filter = filter.filter;
-              break;
-            case 'min':
-              output.min = filter.min;
-              break;
-            case 'max':
-              output.max = filter.max;
-              break;
-            case 'bool':
-              output.bool = filter.bool;
-              break;
-            case 'option':
-              output.options = filter.filteredOptions;
-              break;
-            case 'isCol':
-              // console.log('output.isColumn (before):', output.isColumn)
-              if (this.toggleCol) {
-                output.isColumn = filter.isColumn;
-              }
-              // console.log('output.isColumn (after):', output.isColumn)
-              break;
-          }
-          // console.log('output:', output);
-          ok = true;
-          output.skip = skipFilter(output);
-          // console.log('output:', output);
-
-          return output;
-        } else {
-          return (typeof field.skip === 'boolean')
-            ? field as IHeadConfigInternal
-            : { ...field, skip: skipFilter(field) };
-        }
-      }
-    )
+    this.headConfig = updateFilters(this.headConfig, filter, this.toggleCol);
 
     this._setCols();
-    if (resetOrder) {
-      this.headConfig = setSortOrder(this.headConfig, filter.colName, filter.order);
-    }
 
-    if (ok) {
-      this._setValue(filter.colName, 'filter', filter.dataset.subtype2 as string);
-
-    this.dispatchEvent(
-      new Event('change', { bubbles: true, composed: true })
-    );
-    }
+    this._setValue(filter.colName, 'filter', filter.changed);
 
     // console.log('this:', this);
     // console.groupEnd();
@@ -634,14 +579,15 @@ export class FilterSortTable extends LitElement {
     // console.log('col:', col)
     // console.log('row:', row)
     // console.log('id:', this.id)
-    // console.log('index:', index)
+    // console.log('colIndex:', colIndex)
     const id = this.id + '--' + rowIndex;
     const colID = this.id + '--' + col.field
-    let value : TemplateResult|string = (col.type === 'date' || col.type === 'datetime')
+
+    let value : TemplateResult|string|number = (col.type === 'date' || col.type === 'datetime')
       ? html`<short-date timestamp="${row[col.field]}"></short-date>`
       : (col.type === 'count' && Array.isArray(row[col.field]))
-        ? row[col.field].length
-      : row[col.field].toString();
+        ? (row[col.field] as Array<any>).length
+        : row[col.field].toString();
 
     if (typeof value === 'string' && value.indexOf('@') > -1) {
       // Make emails split if required

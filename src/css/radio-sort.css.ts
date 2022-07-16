@@ -29,8 +29,8 @@ export const radioSort = css`
     width: 1.5rem;
   }
   .radio-sort__label::before {
-    border: 0.1rem solid var(--text-colour);
-    color: var(--text-colour);
+    border: 0.1rem solid var(--txt-colour);
+    color: var(--txt-colour);
     background-color: var(--bg-colour);
     border-radius: 1rem;
     display: block;
@@ -42,9 +42,9 @@ export const radioSort = css`
     width: 1rem;
   }
   input:checked + .radio-sort__label::before {
-    border: 0.05rem solid var(--text-colour);
+    border: 0.05rem solid var(--txt-colour);
     background-color: var(--bg-colour);
-    color: var(--text-colour);
+    color: var(--txt-colour);
   }
   .radio-sort__label--up::before {
     content: '\u25B4';

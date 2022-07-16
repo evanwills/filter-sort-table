@@ -13,7 +13,7 @@ export const style : CSSResult = css`
       --btn-padding-top: 1.3rem;
       --over-colour: rgba(0, 0, 0, 0.85);
       --over-colour--rev: rgba(255, 255, 255, 0.85);
-      --text-colour: #000;
+      --txt-colour: #000;
       --trans-speed: 0.3s;
       --line-weight: 0.05rem;
       --line-weight-hvy: 0.1rem;
@@ -22,7 +22,7 @@ export const style : CSSResult = css`
       --border-radius: 1rem;
       --true-icon: "+";
       --false-icon: "\u2013";
-      --modal-text-colour: #fff;
+      --modal-txt-colour: #fff;
     }
     ${srOnly}
     ${modal(40, 40)}
@@ -35,7 +35,7 @@ export const style : CSSResult = css`
     .btn-open {
       background-color: transparent;
       border: none;
-      color: var(--text-colour);
+      color: var(--txt-colour);
       display: block;
       font-size: 1rem;
       font-weight: bold;
@@ -44,6 +44,7 @@ export const style : CSSResult = css`
       width: 100%;
     }
     ::slotted(*) {
+      color: var(--txt-colour);
       font-weight: bold;
     }
     .btn-open::before {
@@ -80,7 +81,7 @@ export const style : CSSResult = css`
       align-self: center;
       grid-area: sortCtl;
       justify-self: end;
-      --text-colour: var(--modal-text-colour);
+      --txt-colour: var(--txt-colour);
     }
     .filter-label {
       display: inline-block;
@@ -95,8 +96,8 @@ export const style : CSSResult = css`
       grid-area: help;
     }
     code {
-      background-color: var(--over-colour);
-      border: 0.05rem solid var(--over-colour--rev);
+      background-color: var(--txt-colour);
+      border: 0.05rem solid var(--bg-colour);
       padding: 0.2rem 0.3rem;
     }
     .th {
@@ -104,8 +105,8 @@ export const style : CSSResult = css`
     }
 
     .cb-btn__label, .radio-list__wrap, .radio-list__label {
-      --bg-colour: var(--over-colour);
-      --text-colour: var(--modal-text-colour);
+      --bg-colour: var(--bg-colour);
+      --txt-colour: var(--txt-colour);
     }
     .option-list {
       margin: 0;

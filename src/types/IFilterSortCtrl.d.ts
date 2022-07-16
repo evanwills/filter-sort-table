@@ -23,3 +23,47 @@ export type IFilterSortCtrl = {
   doInit : boolean,
   filteredOptions : Array<IListCtrlOptionItem>
 }
+
+/**
+ * Usabel data from a Filter Sort Control component change event
+ */
+export type IFilterSortCtrlData = {
+  /**
+   * Name of the column that was updated
+   */
+  colName: string,
+  /**
+   * Property that was changed
+   */
+  changed: string,
+  /**
+   * Sort order state for column
+   */
+  order: UBoolState,
+  /**
+   * String/Number to filter values on
+   */
+  filter: string|number,
+  /**
+   * For numeric & date/datetime values minimum value to include in
+   * filter
+   */
+  min: number,
+  /**
+   * For numeric & date/datetime values maximum value to include in
+   * filter
+   */
+  max: number,
+  /**
+   * State of boolean filter
+   */
+  bool: UBoolState,
+  /**
+   * List of include/include states for option filter
+   */
+  options: Array<IListCtrlOptionItem>,
+  /**
+   * Whether or not the columns is visible
+   */
+  isColumn: boolean
+}
