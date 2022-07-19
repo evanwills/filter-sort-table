@@ -8,7 +8,7 @@ import { FEventHandler, IDbEnum, IListCtrlItem, IObjArrStrSimple, IObjScalarX, U
 
 import { style } from './css/filter-sort-table.css';
 
-import { convertSep, filterAndSort, getDataType, getDummyCtrl, getExportDataURL, getFilterSortCtrlData, headConfigToListCtrl, setExportColOrder, skipFilter, sortExportCols, updateFilters } from './utilities/filter-sort.utils';
+import { convertSep, filterAndSort, getDataType, getCtrlData, getExportDataURL, getFilterSortCtrlData, headConfigToListCtrl, setExportColOrder, skipFilter, sortExportCols, updateFilters } from './utilities/filter-sort.utils';
 import { getMoveBtns, getToggleInput } from './utilities/filter-sort-render.utils';
 import { isInt, isNumber } from './utilities/validation';
 import { isTrue } from './utilities/sanitise';
@@ -433,7 +433,7 @@ export class FilterSortTable extends LitElement {
 
       case 'up':
       case 'down':
-        const exportData : IFilterSortCtrlData = getDummyCtrl(
+        const exportData : IFilterSortCtrlData = getCtrlData(
           btn.dataset.type as string,
           'move-export',
           btn.value
@@ -450,7 +450,7 @@ export class FilterSortTable extends LitElement {
 
       case 'left':
       case 'right':
-        const colData : IFilterSortCtrlData = getDummyCtrl(
+        const colData : IFilterSortCtrlData = getCtrlData(
           btn.dataset.type as string,
           'move-column',
           btn.value
@@ -476,7 +476,7 @@ export class FilterSortTable extends LitElement {
     const cb = event.target as HTMLInputElement;
     console.group('_toggleExportCol()')
 
-    const data : IFilterSortCtrlData = getDummyCtrl(
+    const data : IFilterSortCtrlData = getCtrlData(
       cb.dataset.type as string,
       'in-export'
     );

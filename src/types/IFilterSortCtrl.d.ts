@@ -1,5 +1,5 @@
 import { IHeadConfigInternal } from "./header-config";
-import { IDbEnum, IListCtrlItem, UBoolState } from "./Igeneral"
+import { IDbEnum, IListCtrlItem, IListCtrlOptionItem, UBoolState } from "./Igeneral"
 
 export type UDataType = 'text' | 'number' | 'date' | 'datetime' | 'bool' | 'option' | 'count';
 

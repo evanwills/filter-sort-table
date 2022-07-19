@@ -498,17 +498,49 @@ export const getHeadConfigInt = (ctrl : IHeadConfig|IHeadConfigInternal) : IHead
   }
 }
 
-export const getDummyCtrl = (colName : string, changed: string, filter: string|number = '') : IFilterSortCtrlData => {
-  return {
+/**
+ * Get data that mimics data from a Filter Sort Control component to
+ * be used when events are triggered by user interaction with
+ * non-<filter-sort-ctrl> inputs
+ *
+ * @param colName Name of field being updated
+ * @param changed Property being changed
+ * @param value   New value of property
+ *
+ * @returns Useful data (as if) from Filter Sort Control component
+ *          in a simple object
+ */
+export const getCtrlData = (colName : string, changed: string, value: string|number = '') : IFilterSortCtrlData => {
+  const output : IFilterSortCtrlData = {
     colName: colName,
     changed: changed,
-    filter: filter,
+    filter: '',
     order: 0,
     min: 0,
     max: 0,
     bool: 0,
     options: []
-  };
+  }
+  switch (changed) {
+    case 'filter':
+    case 'move-column':
+    case 'move-export':
+      output.filter = value;
+      break;
+    case 'order':
+      output.order = getBoolState(value);
+      break;
+    case 'min':
+      output.min = parseInt(value as string);
+      break;
+    case 'max':
+      output.max = parseInt(value as string);
+      break;
+    case 'bool':
+      output.bool = getBoolState(value as string);
+      break;
+  }
+  return output;
 }
 
 /**
@@ -581,7 +613,7 @@ export const updateFilter = (
       case 'min':
         if (field.min !== ctrl.min) {
           output.min = ctrl.min;
-          if (output.max !== 0 && output.max < output.min) {
+          if (output.min !== 0 && output.max !== 0 && output.max < output.min) {
             output.max = output.min;
           }
           hasChanged = true;
@@ -591,7 +623,7 @@ export const updateFilter = (
       case 'max':
         if (field.max !== ctrl.max) {
           output.max = ctrl.max;
-          if (output.min !== 0 && output.min > output.max) {
+          if (output.max !== 0 && output.min !== 0 && output.min > output.max) {
             output.min = output.max;
           }
           hasChanged = true;
