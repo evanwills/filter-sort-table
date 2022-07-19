@@ -182,6 +182,11 @@ export interface  IListCtrlItem {
    * Whether or not this field should be included as a column in the
    * table
    */
+  colOrder: number,
+  /**
+   * Whether or not this field should be included as a column in the
+   * table
+   */
   isFilter: boolean,
   /**
    * Normally, empty values are ignored. This causes only items with

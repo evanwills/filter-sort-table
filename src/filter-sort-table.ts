@@ -8,7 +8,7 @@ import { FEventHandler, IDbEnum, IListCtrlItem, IObjArrStrSimple, IObjScalarX, U
 
 import { style } from './css/filter-sort-table.css';
 
-import { convertSep, filterAndSort, getDataType, getExportDataURL, getFilterSortCtrlData, headConfigToListCtrl, moveExportCol, setExportColOrder, skipFilter, sortExportCols, updateFilters } from './utilities/filter-sort.utils';
+import { convertSep, filterAndSort, getDataType, getDummyCtrl, getExportDataURL, getFilterSortCtrlData, headConfigToListCtrl, setExportColOrder, skipFilter, sortExportCols, updateFilters } from './utilities/filter-sort.utils';
 import { getMoveBtns, getToggleInput } from './utilities/filter-sort-render.utils';
 import { isInt, isNumber } from './utilities/validation';
 import { isTrue } from './utilities/sanitise';
@@ -19,6 +19,7 @@ import { ShortDate } from './short-date';
 import './filter-sort-ctrl';
 import './short-date';
 import { getBoolState } from './utilities/general.utils';
+import { IFilterSortCtrlData } from './types/IFilterSortCtrl';
 
 /**
  * An example element.
@@ -60,6 +61,13 @@ export class FilterSortTable extends LitElement {
    */
   @property({ type: Boolean })
   toggleCol : boolean = false;
+
+  /**
+   * Whether or not user change the order of columns
+   * (visable and hidden)
+   */
+  @property({ type: Boolean })
+  moveCols : boolean = false;
 
   /**
    * Whether or not to do intialisation stuff
@@ -108,13 +116,16 @@ export class FilterSortTable extends LitElement {
   value : IListCtrlItem | string = '';
 
   @state()
-  cols : Array<IHeadConfig> = [];
+  cols : Array<IHeadConfigInternal> = [];
   @state()
-  nonCols : Array<IHeadConfig> = [];
+  nonCols : Array<IHeadConfigInternal> = [];
   @state()
   showExtra : boolean = false;
   @state()
   showExport : boolean = false;
+
+  @state()
+  _headConfig : Array<IHeadConfigInternal> = [];
 
   static styles = style;
 
@@ -137,7 +148,7 @@ export class FilterSortTable extends LitElement {
     }
 
     // console.log('headConfig:', this.headConfig)
-    this.headConfig = setExportColOrder(
+    this._headConfig = setExportColOrder(
       this.headConfig.map(
         (item : IHeadConfig) : IHeadConfigInternal => {
           return {
@@ -169,8 +180,8 @@ export class FilterSortTable extends LitElement {
     // console.groupEnd();
 
     // Make a list of all the table columns
-    this.cols = this.headConfig.filter(
-      (col : IHeadConfig) => col.isColumn
+    this.cols = this._headConfig.filter(
+      (col) => col.isColumn
       // (col : IHeadConfig) => {
       //   console.log('col.label:', col.label)
       //   console.log('col.isColumn:', col.isColumn)
@@ -180,8 +191,8 @@ export class FilterSortTable extends LitElement {
 
     // Make a list of all the fields that are filterable but should
     // not be rendered as columns
-    this.nonCols = this.headConfig.filter(
-      (col : IHeadConfig) => (col.isFilter && !col.isColumn)
+    this.nonCols = this._headConfig.filter(
+      (col) => (col.isFilter && !col.isColumn)
     );
     // console.group('_setCols() - after')
     // console.log('this.cols.length:', this.cols.length)
@@ -217,6 +228,7 @@ export class FilterSortTable extends LitElement {
           ? col.innerText.trim()
           : col.innerHTML,
         isColumn: true,
+        colOrder: a,
         isFilter: (typeof col.dataset.type === 'string'  && col.dataset.type.trim() !== ''),
         type: (typeof col.dataset.type === 'string' && col.dataset.type.trim() !== '')
           ? getDataType(col.dataset.type)
@@ -273,10 +285,12 @@ export class FilterSortTable extends LitElement {
         tmp.field = col.innerText.trim().replace(/\s+/g, '-');
       }
 
+      // tmp.skip = skipFilter(tmp);
+
       output.push(tmp);
     }
 
-    this.headConfig = output;
+    this._headConfig = output;
   }
 
   /**
@@ -293,13 +307,13 @@ export class FilterSortTable extends LitElement {
       const tmp : IObjScalarX = {};
       // console.log('rows[' + a + '].children', rows[a].children)
 
-      for (let b = 0; b < this.headConfig.length; b += 1) {
-        const ctrlItem : IHeadConfig = this.headConfig[b];
+      for (let b = 0; b < this._headConfig.length; b += 1) {
+        const ctrlItem : IHeadConfig = this._headConfig[b];
         if (typeof rows[a].children[b] !== 'undefined') {
           let _val : UScalar = (rows[a].children[b] as HTMLTableCellElement).innerText.trim().replace(/\s+/g, ' ');
           // console.log('rows[' + a + '].children[' + b + ']:', rows[a].children[b])
 
-          switch (this.headConfig[b].type) {
+          switch (this._headConfig[b].type) {
             case 'date':
             case 'datetime':
               if (typeof rows[a].children[b].children !== 'undefined' && typeof rows[a].children[b].children[0] !== 'undefined') {
@@ -339,7 +353,7 @@ export class FilterSortTable extends LitElement {
 
           }
 
-          tmp[this.headConfig[b].field] = _val;
+          tmp[this._headConfig[b].field] = _val;
         }
 
       }
@@ -348,7 +362,7 @@ export class FilterSortTable extends LitElement {
     }
 
     // Add enums for fixed option columns
-    this.headConfig = this.headConfig.map((item: IHeadConfig) : IHeadConfig => {
+    this._headConfig = this._headConfig.map((item) => {
       if (item.type === 'option' && typeof item.enumList === 'undefined' && typeof options[item.field] !== 'undefined') {
         item.enumList = options[item.field].map(
           (name: string, index: number) : IDbEnum => {
@@ -386,12 +400,13 @@ export class FilterSortTable extends LitElement {
     // console.log('filter:', filter);
     // console.log('filter.value:', filter.value);
     // console.log('filter.dataset.type:', filter.dataset.type);
+    const data = updateFilters(this._headConfig, filter, this.toggleCol, this.moveCols);
 
-    this.headConfig = updateFilters(this.headConfig, filter, this.toggleCol);
-
-    this._setCols();
-
-    this._setValue(filter.colName, 'filter', filter.changed);
+    if (data.hasChanged) {
+      this._headConfig = data.filters;
+      this._setCols();
+      this._setValue(filter.colName, 'filter', filter.changed);
+    }
 
     // console.log('this:', this);
     // console.groupEnd();
@@ -402,7 +417,7 @@ export class FilterSortTable extends LitElement {
    *
    * @param event User triggered click event
    */
-  private _toggleModal(event: Event) : void {
+  private _btnClickHandler(event: Event) : void {
     // _event.preventDefault();
     const btn = event.target as HTMLButtonElement;
     this.dataset.subType = '';
@@ -418,11 +433,36 @@ export class FilterSortTable extends LitElement {
 
       case 'up':
       case 'down':
-        this.headConfig = moveExportCol(
-          this.headConfig, btn.dataset.type as string, btn.value
+        const exportData : IFilterSortCtrlData = getDummyCtrl(
+          btn.dataset.type as string,
+          'move-export',
+          btn.value
         );
 
-        this._setValue(btn.dataset.type as string, 'export-move', btn.value);
+        const exportTmp = updateFilters(this._headConfig, exportData);
+
+        if (exportTmp.hasChanged) {
+          this._headConfig = exportTmp.filters
+          this._setValue(btn.dataset.type as string, exportData.changed, btn.value);
+        }
+
+        break;
+
+      case 'left':
+      case 'right':
+        const colData : IFilterSortCtrlData = getDummyCtrl(
+          btn.dataset.type as string,
+          'move-column',
+          btn.value
+        );
+
+        const colTmp = updateFilters(this._headConfig, colData);
+
+        if (colTmp.hasChanged) {
+          this._headConfig = colTmp.filters
+          this._setValue(btn.dataset.type as string, colData.changed, btn.value);
+        }
+
         break;
     }
   }
@@ -434,24 +474,20 @@ export class FilterSortTable extends LitElement {
    */
   private _toggleExportCol(event: Event) : void {
     const cb = event.target as HTMLInputElement;
-    let hasChanged = false;
     console.group('_toggleExportCol()')
 
-    this.headConfig = this.headConfig.map((col: IHeadConfig) : IHeadConfig => {
-      if (col.field === cb.dataset.type) {
-        hasChanged = true;
-        return {
-          ...col,
-          export: !col.export
-        }
-      } else {
-        return col;
-      }
-    });
+    const data : IFilterSortCtrlData = getDummyCtrl(
+      cb.dataset.type as string,
+      'in-export'
+    );
 
-    if (hasChanged) {
-      this._setValue(cb.dataset.type as string, 'export-toggle', cb.dataset.type as string);
+    const tmp = updateFilters(this._headConfig, data);
+
+    if (tmp.hasChanged) {
+      this._headConfig = tmp.filters
+      this._setValue(cb.dataset.type as string, data.changed, data.colName);
     }
+
     console.groupEnd();
   }
 
@@ -483,7 +519,7 @@ export class FilterSortTable extends LitElement {
     // _event.preventDefault();
     const link = _event.target as HTMLLinkElement;
     const data = getExportDataURL(
-      this.tableData, this.headConfig,
+      this.tableData, this._headConfig,
       this.colSep, this.rowSep, !this.omitHeaders
     );
 
@@ -647,18 +683,18 @@ export class FilterSortTable extends LitElement {
       : -1
 
     return html`
-      <button @click=${this._toggleModal} class="extra-open focusable" value="extra"><span class="sr-only">Show extra filters</span></button>
+      <button @click=${this._btnClickHandler} class="extra-open focusable" value="extra"><span class="sr-only">Show extra filters</span></button>
       <div class="wrap wrap--${show}">
         <button class="btn-close btn-close--${show} focusable"
                 value="extra"
                 tabindex="${ifDefined(tabIndex)}"
-               @click=${this._toggleModal}>
+               @click=${this._btnClickHandler}>
           <span class="sr-only">Hide extra filters</span>
         </button>
         <h2>Filters for hidden columns</h2>
         <div class="extra__list__wrap">
           <ul class="extra__list">
-            ${this.headConfig.filter(
+            ${this._headConfig.filter(
               (col: IHeadConfig) => (!col.isColumn && col.isFilter)
             ).map(
               (col: IHeadConfig) : TemplateResult => html`
@@ -690,7 +726,7 @@ export class FilterSortTable extends LitElement {
       <button class="bg-close bg-close--${show}"
               value="extra"
               tabindex="${ifDefined(tabIndex)}"
-             @click=${this._toggleModal}>
+             @click=${this._btnClickHandler}>
         <span class="sr-only">Hide extra filters</span>
       </button>
     `;
@@ -730,7 +766,7 @@ export class FilterSortTable extends LitElement {
           col.label,
           (index === 0),
           (index === (count - 1)),
-          this._toggleModal,
+          this._btnClickHandler,
           tabIndex
         )}
       </li>
@@ -742,7 +778,7 @@ export class FilterSortTable extends LitElement {
       return '';
     }
 
-    const cols = [...this.headConfig];
+    const cols = [...this._headConfig];
     cols.sort(sortExportCols);
 
     const show = (this.showExport)
@@ -755,14 +791,14 @@ export class FilterSortTable extends LitElement {
     return html`
       <button value="export"
               class="export focusable"
-             @click=${this._toggleModal}>
+             @click=${this._btnClickHandler}>
         Export
       </button>
       <div class="wrap wrap--${show}">
         <button class="btn-close btn-close--${show} focusable"
                 value="export"
                 tabindex="${tabIndex}"
-               @click=${this._toggleModal}>
+               @click=${this._btnClickHandler}>
           <span class="sr-only">Hide export control</span>
         </button>
         <h2>Manage exported columns</h2>
@@ -809,7 +845,7 @@ export class FilterSortTable extends LitElement {
       <button class="bg-close bg-close--${show}"
               value="export"
               tabindex="${ifDefined(tabIndex)}"
-             @click=${this._toggleModal}>
+             @click=${this._btnClickHandler}>
         <span class="sr-only">Hide export control</span>
       </button>`;
   }
@@ -834,7 +870,7 @@ export class FilterSortTable extends LitElement {
       : this.lastFiltered;
     console.group('getLastUpdated()');
     console.log('_field:', _field)
-    const output = this.headConfig.filter(
+    const output = this._headConfig.filter(
       (item: IHeadConfig) => item.field === _field
     ).map(headConfigToListCtrl);
 
@@ -851,12 +887,12 @@ export class FilterSortTable extends LitElement {
    * @returns All List Control items
    */
   getAllListCtrl() : Array<IListCtrlItem> {
-    return this.headConfig.map(headConfigToListCtrl);
+    return this._headConfig.map(headConfigToListCtrl);
   }
 
   render() {
     // console.group('render()')
-    // console.log('headConfig:', this.headConfig)
+    // console.log('this._headConfig:', this._headConfig)
     if (this.doInit === true) {
       this._doInit();
     }
@@ -892,7 +928,7 @@ export class FilterSortTable extends LitElement {
             </tr>
           </thead>
           <tbody>
-            ${repeat(filterAndSort(this.tableData, this.headConfig), item => item.id, this._renderRow)}
+            ${repeat(filterAndSort(this.tableData, this._headConfig), item => item.id, this._renderRow)}
           </tbody>
         </table>
       </div>

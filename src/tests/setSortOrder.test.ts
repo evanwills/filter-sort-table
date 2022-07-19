@@ -1,14 +1,14 @@
 import { setSortOrder } from "../utilities/filter-sort.utils";
-import { headConfig } from "../data/form-data";
+import { formHeadConfig } from "../data/form-data";
 
 test(
   'setSortOrder() set one column to decending',
   () => {
-    const oldGroup = headConfig[2];
-    const updated = setSortOrder(headConfig, 'group', 1);
+    const oldGroup = formHeadConfig[2];
+    const updated = setSortOrder(formHeadConfig, 'group', 1);
     const newGroup = updated[2];
 
-    expect(setSortOrder(headConfig, 'group', 1)).not.toEqual(headConfig);
+    expect(setSortOrder(formHeadConfig, 'group', 1)).not.toEqual(formHeadConfig);
     expect(newGroup).not.toEqual(oldGroup);
     expect(newGroup.order).toEqual(1);
     expect(newGroup.orderPriority).toEqual(0);
@@ -18,17 +18,17 @@ test(
 test(
   'setSortOrder() set two columns to decending',
   () => {
-    const oldGroup = headConfig[2];
-    const oldName = headConfig[1];
+    const oldGroup = formHeadConfig[2];
+    const oldName = formHeadConfig[1];
     const updated = setSortOrder(
-      setSortOrder(headConfig, 'name', 1),
+      setSortOrder(formHeadConfig, 'name', 1),
       'group',
       1
     );
     const newGroup = updated[2];
     const newName = updated[1];
 
-    expect(setSortOrder(headConfig, 'group', 1)).not.toEqual(headConfig);
+    expect(setSortOrder(formHeadConfig, 'group', 1)).not.toEqual(formHeadConfig);
 
     expect(newGroup).not.toEqual(oldGroup);
     expect(newGroup.order).toEqual(1);
@@ -43,13 +43,13 @@ test(
 test(
   'setSortOrder() set sort state for three columns',
   () => {
-    const oldGroup = headConfig[2];
-    const oldName = headConfig[1];
-    const oldStatus = headConfig[4];
+    const oldGroup = formHeadConfig[2];
+    const oldName = formHeadConfig[1];
+    const oldStatus = formHeadConfig[4];
 
     const updated = setSortOrder(
       setSortOrder(
-        setSortOrder(headConfig, 'status', -1),
+        setSortOrder(formHeadConfig, 'status', -1),
         'name',
         1
       ),
@@ -77,13 +77,13 @@ test(
 test(
   'setSortOrder() set sort state for three columns then revert the sort order for the second',
   () => {
-    const oldGroup = headConfig[2];
-    const oldName = headConfig[1];
-    const oldStatus = headConfig[4];
+    const oldGroup = formHeadConfig[2];
+    const oldName = formHeadConfig[1];
+    const oldStatus = formHeadConfig[4];
 
     const updated = setSortOrder(
       setSortOrder(
-        setSortOrder(headConfig, 'status', -1),
+        setSortOrder(formHeadConfig, 'status', -1),
         'name',
         1
       ),

@@ -1,3 +1,4 @@
+import { IHeadConfigInternal } from "./header-config";
 import { IDbEnum, IListCtrlItem, UBoolState } from "./Igeneral"
 
 export type UDataType = 'text' | 'number' | 'date' | 'datetime' | 'bool' | 'option' | 'count';
@@ -61,9 +62,18 @@ export type IFilterSortCtrlData = {
   /**
    * List of include/include states for option filter
    */
-  options: Array<IListCtrlOptionItem>,
-  /**
-   * Whether or not the columns is visible
-   */
-  isColumn: boolean
+  options: Array<IListCtrlOptionItem>
+}
+
+export type IFilterUpdateResult = {
+  item: IHeadConfigInternal,
+  hasChanged: boolean,
+  resetOrder: boolean,
+  moveExport: boolean,
+  moveCol: boolean
+}
+
+export type IAllFiltersUpdateResult = {
+  filters: Array<IHeadConfigInternal>,
+  hasChanged: boolean
 }
