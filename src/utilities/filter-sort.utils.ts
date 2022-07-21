@@ -562,7 +562,7 @@ export const getFilterSortCtrlData = (filter: FilterSortCtrl) : IFilterSortCtrlD
  * @returns Updated version of field (if field has been changed) or
  *          original field object if nothing was changed
  */
-export const updateFilter = (
+export const updateSingleFIlter = (
   field : IHeadConfigInternal,
   ctrl : IFilterSortCtrlData,
   toggleCols: boolean = false,
@@ -694,7 +694,7 @@ export const updateFilter = (
  *
  * @returns Update list of filters
  */
-export const updateFilters = (
+export const updateAllFilters = (
   filters : Array<IHeadConfigInternal>,
   ctrl : IFilterSortCtrlData,
   toggleCols: boolean = false,
@@ -708,7 +708,7 @@ export const updateFilters = (
   let output : Array<IHeadConfigInternal> = [...filters];
 
   for (let a = 0; a < output.length; a += 1) {
-    const data = updateFilter(output[a], ctrl, toggleCols, moveCols);
+    const data = updateSingleFIlter(output[a], ctrl, toggleCols, moveCols);
 
     if (data.hasChanged) {
       hasChanged = true;
@@ -725,7 +725,14 @@ export const updateFilters = (
   } else if (moveExport) {
     output = moveExportCol(output, ctrl.colName, ctrl.filter as string)
   } else if (moveCol) {
+    console.group('updateAllFilters()')
+    console.log('output (before):', output);
+    console.log('ctrl:', ctrl);
+    console.log('ctrl.colName:', ctrl.colName);
+    console.log('ctrl.filter:', ctrl.filter);
     output = moveTableCol(output, ctrl.colName, ctrl.filter as string)
+    console.log('output (after):', output);
+    console.groupEnd();
   }
 
   return {
@@ -1178,7 +1185,7 @@ export const moveTableCol = (
     }
   }
   let newOrder = oldOrder + incrememt;
-  return cols.map(
+  const output = cols.map(
     (col) => {
       if (col.field === field) {
         return {
@@ -1195,6 +1202,18 @@ export const moveTableCol = (
       }
     }
   );
+
+  output.sort((a, b) => {
+    if (a.colOrder < b.colOrder) {
+      return -1;
+    } else if (a.colOrder > b.colOrder) {
+      return 1;
+    } else {
+      return 0;
+    }
+  })
+
+  return output;
 }
 
 /**

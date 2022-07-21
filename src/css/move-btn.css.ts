@@ -36,4 +36,12 @@ export const moveBtn = css`
     content: '\u25BE';
     line-height: 1rem;
   }
+  .move-btn--left::before {
+    content: '\u25C2';
+    line-height: 0.7rem;
+  }
+  .move-btn--right::before {
+    content: '\u25B8';
+    line-height: 1rem;
+  }
 `;

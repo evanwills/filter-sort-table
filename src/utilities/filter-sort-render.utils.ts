@@ -349,8 +349,8 @@ export const getSortBtns = (
                tabindex="${ifDefined(tabIndex)}"
               ?checked=${_val === 1}
               @change=${handler} />
-        <label for="${id}__sort__1" class="radio-sort__label radio-sort__label--up focusable-label">
-          <span class="sr-only">Sort by ${label} descending</span>
+        <label for="${id}__sort__1" class="radio-sort__label radio-sort__label--up focusable-label" title="Ascending order">
+          <span class="sr-only">Sort by ${label} ascending</span>
         </label>
       </li>
       <li class="radio-sort__item">
@@ -364,7 +364,7 @@ export const getSortBtns = (
                tabindex="${ifDefined(tabIndex)}"
               ?checked=${_val === 0}
               @change=${handler} />
-        <label for="${id}__sort__0" class="radio-sort__label radio-sort__label--ignore focusable-label">
+        <label for="${id}__sort__0" class="radio-sort__label radio-sort__label--ignore focusable-label" title="No order">
           <span class="sr-only">Do not sort by ${label}</span>
         </label>
       </li>
@@ -379,8 +379,8 @@ export const getSortBtns = (
                tabindex="${ifDefined(tabIndex)}"
               ?checked=${_val === -1}
               @change=${handler} />
-        <label for="${id}__sort__-1" class="radio-sort__label radio-sort__label--down focusable-label">
-          <span class="sr-only">Sort by ${label} ascending</span>
+        <label for="${id}__sort__-1" class="radio-sort__label radio-sort__label--down focusable-label" title="Decending order">
+          <span class="sr-only">Sort by ${label} decending</span>
         </label>
       </li>
     </ul>`;
@@ -403,7 +403,7 @@ export const getSortBtns = (
  *          with one or two move buttons is returned. Otherwise an
  *          empty string is returned
  */
-export const getMoveBtns = (
+export const getExportMoveBtns = (
   id: string|number,
   label: string,
   isTop: boolean,
@@ -414,7 +414,7 @@ export const getMoveBtns = (
 ) : TemplateResult|string => {
   return (!isTop || !isBottom)
     ? html`
-        <span class="move-btn__wrap" role="radiogroup">
+        <span class="move-btn__wrap" role="group">
           ${(!isTop)
             ? html`
                 <button value="up"
@@ -438,6 +438,64 @@ export const getMoveBtns = (
                         tabindex="${ifDefined(tabIndex)}"
                         title="Move ${label} down">
                   <span class="sr-only">Move ${label} down</span>
+                </button>`
+            : ''
+          }
+        </span>
+      `
+    : '';
+}
+
+/**
+ *
+ * @param label    Label of thing to be moved
+ * @param isFirst  Whether item is at the top of its list
+ * @param isLast   Whether item is at the bottom of its list
+ * @param handler  Event handler callback function
+ * @param tabIndex Tabindex of buttons.
+ *                 `undefined` if buttons are visible
+ *                 -1 if buttons are hidden
+ * @param childID  If item is a child item, this is the ID of the
+ *                 child item.
+ *
+ * @returns If item is not BOTH top & bottom of its list, a template
+ *          with one or two move buttons is returned. Otherwise an
+ *          empty string is returned
+ */
+ export const getColMoveBtns = (
+  label: string,
+  isFirst: boolean,
+  isLast: boolean,
+  handler : FEventHandler,
+  tabIndex: UTabIndex = undefined,
+  childID: number|undefined = undefined
+) : TemplateResult|string => {
+  return (!isFirst || !isLast)
+    ? html`
+        <span class="move-btn__wrap move-btn__wrap--column" role="group">
+          ${(!isFirst)
+            ? html`
+                <button value="left"
+                        class="move-btn move-btn--left focusable"
+                        data-type="move"
+                        data-childid="${ifDefined(childID)}"
+                       @click=${handler}
+                        tabindex="${ifDefined(tabIndex)}"
+                        title="Move ${label} left">
+                  <span class="sr-only">Move ${label} left</span>
+                </button>`
+            : ''
+          }
+          ${(!isLast)
+            ? html`
+                <button value="right"
+                        class="move-btn move-btn--right focusable"
+                        data-type="move"
+                        data-childid="${ifDefined(childID)}"
+                       @click=${handler}
+                        tabindex="${ifDefined(tabIndex)}"
+                        title="Move ${label} right">
+                  <span class="sr-only">Move ${label} right</span>
                 </button>`
             : ''
           }

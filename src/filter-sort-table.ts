@@ -8,8 +8,8 @@ import { FEventHandler, IDbEnum, IListCtrlItem, IObjArrStrSimple, IObjScalarX, U
 
 import { style } from './css/filter-sort-table.css';
 
-import { convertSep, filterAndSort, getDataType, getCtrlData, getExportDataURL, getFilterSortCtrlData, headConfigToListCtrl, setExportColOrder, sortExportCols, updateFilters, headConfigToInternal } from './utilities/filter-sort.utils';
-import { getMoveBtns, getToggleInput } from './utilities/filter-sort-render.utils';
+import { convertSep, filterAndSort, getDataType, getCtrlData, getExportDataURL, getFilterSortCtrlData, headConfigToListCtrl, setExportColOrder, sortExportCols, updateAllFilters, headConfigToInternal } from './utilities/filter-sort.utils';
+import { getExportMoveBtns, getToggleInput } from './utilities/filter-sort-render.utils';
 import { isInt, isNumber } from './utilities/validation';
 import { isTrue } from './utilities/sanitise';
 
@@ -60,13 +60,13 @@ export class FilterSortTable extends LitElement {
    * Whether or not user can toggle column visibility
    */
   @property({ type: Boolean })
-  toggleCol : boolean = false;
+  toggleCols : boolean = false;
 
   /**
    * Whether or not user can change the order of columns
    */
   @property({ type: Boolean })
-  canMoveCols : boolean = false;
+  moveCols : boolean = false;
 
   /**
    * Whether or not to do intialisation stuff
@@ -153,7 +153,7 @@ export class FilterSortTable extends LitElement {
           return headConfigToInternal(
             item,
             index,
-            this.canMoveCols,
+            this.moveCols,
             index === 0,
             index + 1 === this.headConfig.length
           );
@@ -408,7 +408,7 @@ export class FilterSortTable extends LitElement {
     // console.log('filter:', filter);
     // console.log('filter.value:', filter.value);
     // console.log('filter.dataset.type:', filter.dataset.type);
-    const data = updateFilters(this._headConfig, filter, this.toggleCol, this.canMoveCols);
+    const data = updateAllFilters(this._headConfig, filter, this.toggleCols, this.moveCols);
 
     if (data.hasChanged) {
       this._headConfig = data.filters;
@@ -447,7 +447,7 @@ export class FilterSortTable extends LitElement {
           btn.value
         );
 
-        const exportTmp = updateFilters(this._headConfig, exportData);
+        const exportTmp = updateAllFilters(this._headConfig, exportData);
 
         if (exportTmp.hasChanged) {
           this._headConfig = exportTmp.filters
@@ -464,7 +464,7 @@ export class FilterSortTable extends LitElement {
           btn.value
         );
 
-        const colTmp = updateFilters(this._headConfig, colData);
+        const colTmp = updateAllFilters(this._headConfig, colData);
 
         if (colTmp.hasChanged) {
           this._headConfig = colTmp.filters
@@ -489,7 +489,7 @@ export class FilterSortTable extends LitElement {
       'in-export'
     );
 
-    const tmp = updateFilters(this._headConfig, data);
+    const tmp = updateAllFilters(this._headConfig, data);
 
     if (tmp.hasChanged) {
       this._headConfig = tmp.filters
@@ -549,12 +549,12 @@ export class FilterSortTable extends LitElement {
       ? tmp
       : '';
 
-    console.group('_setValue()')
-    console.log('this.lastFiltered:', this.lastFiltered)
-    console.log('this.lastAction:', this.lastAction)
-    console.log('this.lastActionSub:', this.lastActionSub)
-    console.log('this.value:', this.value)
-    console.groupEnd()
+    // console.group('_setValue()')
+    // console.log('this.lastFiltered:', this.lastFiltered)
+    // console.log('this.lastAction:', this.lastAction)
+    // console.log('this.lastActionSub:', this.lastActionSub)
+    // console.log('this.value:', this.value)
+    // console.groupEnd()
 
       this.dispatchEvent(
         new Event('change', { bubbles: true, composed: true })
@@ -599,7 +599,8 @@ export class FilterSortTable extends LitElement {
                           bool="${col.bool}"
                           order="${col.order}"
                           iscolumn="${col.isColumn}"
-                         ?togglecol="${this.toggleCol}"
+                         ?togglecols="${this.toggleCols}"
+                         ?canMove="${this.moveCols}"
                           toggleOnEmpty="${col.toggleOnEmpty}"
                          .statedata=${col.options}
                          .options=${options}
@@ -719,7 +720,7 @@ export class FilterSortTable extends LitElement {
                                     bool="${col.bool}"
                                     order="${col.order}"
                                     iscolumn="${col.isColumn}"
-                                   ?togglecol="${this.toggleCol}"
+                                   ?togglecols="${this.toggleCols}"
                                    .statedata=${col.options}
                                    .options=${col.enumList}
                                    @change=${this._handler}
@@ -754,7 +755,7 @@ export class FilterSortTable extends LitElement {
             tabIndex
           )}
         </span>
-        ${getMoveBtns(
+        ${getExportMoveBtns(
           col.field,
           col.label,
           (index === 0),
@@ -861,14 +862,14 @@ export class FilterSortTable extends LitElement {
     const _field = (field !== '')
       ? field
       : this.lastFiltered;
-    console.group('getLastUpdated()');
-    console.log('_field:', _field)
+    // console.group('getLastUpdated()');
+    // console.log('_field:', _field)
     const output = this._headConfig.filter(
       (item: IHeadConfig) => item.field === _field
     ).map(headConfigToListCtrl);
 
-    console.log('output:', output)
-    console.groupEnd()
+    // console.log('output:', output)
+    // console.groupEnd()
     return (output.length === 1)
       ? output[0]
       : false;

@@ -1,4 +1,4 @@
-import { getCtrlData, headConfigToInternal, updateFilter } from "../utilities/filter-sort.utils";
+import { getCtrlData, headConfigToInternal, updateSingleFIlter } from "../utilities/filter-sort.utils";
 import { adminHeadConfig, formHeadConfig } from "../data/form-data";
 import { IListCtrlOptionItem } from "../types/Igeneral";
 // import { IFilterUpdateResult } from '../types/IFilterSortCtrl';
@@ -6,10 +6,10 @@ import { IListCtrlOptionItem } from "../types/Igeneral";
 
 
 test( //  #1
-  'updateFilter() test non-matched field update because the column name of the filter control doesn\'t match the field being updated',
+  'updateSingleFIlter() test non-matched field update because the column name of the filter control doesn\'t match the field being updated',
   () => {
-    const oldCol = headConfigToInternal(formHeadConfig[1]);
-    const data = updateFilter(oldCol, getCtrlData('id', 'filter', 2));
+    const oldCol = headConfigToInternal(formHeadConfig[1], 1);
+    const data = updateSingleFIlter(oldCol, getCtrlData('id', 'filter', 2));
     const newCol = data.item;
 
     // ------------------------------------------
@@ -24,12 +24,12 @@ test( //  #1
 );
 
 test( //  #2
-  'updateFilter() test "basic (text)" filter update',
+  'updateSingleFIlter() test "basic (text)" filter update',
   () => {
     const col = 'name';
     const change = 'filter';
-    const oldCol = headConfigToInternal(formHeadConfig[1]);
-    const data = updateFilter(oldCol, getCtrlData(col, change, 'dan'));
+    const oldCol = headConfigToInternal(formHeadConfig[1], 1);
+    const data = updateSingleFIlter(oldCol, getCtrlData(col, change, 'dan'));
     const newCol = data.item;
 
     // ------------------------------------------
@@ -76,7 +76,7 @@ test( //  #2
     // ------------------------------------------
     // Revert the last change and check the results
 
-    const newData = updateFilter(newCol, getCtrlData(col, change, ''));
+    const newData = updateSingleFIlter(newCol, getCtrlData(col, change, ''));
     expect(newData.hasChanged).toBeTruthy();
     expect(newData.item.max).toEqual(0);
     expect(newData.item.skip).toEqual(true);
@@ -84,12 +84,12 @@ test( //  #2
 );
 
 test( //  #3
-  'updateFilter() test "basic (number)" filter update',
+  'updateSingleFIlter() test "basic (number)" filter update',
   () => {
     const col = 'id';
     const change = 'filter';
-    const oldCol = headConfigToInternal(formHeadConfig[0]);
-    const data = updateFilter(oldCol, getCtrlData(col, change, 2));
+    const oldCol = headConfigToInternal(formHeadConfig[0], 0);
+    const data = updateSingleFIlter(oldCol, getCtrlData(col, change, 2));
     const newCol = data.item;
 
     // ------------------------------------------
@@ -136,7 +136,7 @@ test( //  #3
     // ------------------------------------------
     // Revert the last change and check the results
 
-    const newData = updateFilter(newCol, getCtrlData(col, change, ''));
+    const newData = updateSingleFIlter(newCol, getCtrlData(col, change, ''));
     expect(newData.hasChanged).toBeTruthy();
     expect(newData.item.max).toEqual(0);
     expect(newData.item.skip).toEqual(true);
@@ -144,12 +144,12 @@ test( //  #3
 );
 
 test( //  #4
-  'updateFilter() test "number (MIN/max)"  filter update',
+  'updateSingleFIlter() test "number (MIN/max)"  filter update',
   () => {
     const col = 'id';
     const change = 'min';
-    const oldCol = headConfigToInternal(formHeadConfig[0]);
-    const data = updateFilter(oldCol, getCtrlData(col, change, 1));
+    const oldCol = headConfigToInternal(formHeadConfig[0], 0);
+    const data = updateSingleFIlter(oldCol, getCtrlData(col, change, 1));
     const newCol = data.item;
 
     // ------------------------------------------
@@ -196,7 +196,7 @@ test( //  #4
     // ------------------------------------------
     // Revert the last change and check the results
 
-    const newData = updateFilter(newCol, getCtrlData(col, change, 0));
+    const newData = updateSingleFIlter(newCol, getCtrlData(col, change, 0));
     expect(newData.hasChanged).toBeTruthy();
     expect(newData.item.max).toEqual(0);
     expect(newData.item.skip).toEqual(true);
@@ -204,12 +204,12 @@ test( //  #4
 );
 
 test( //  #5
-  'updateFilter() test "number (min/MAX)"  filter update',
+  'updateSingleFIlter() test "number (min/MAX)"  filter update',
   () => {
     const col = 'id';
     const change = 'max';
-    const oldCol = headConfigToInternal(formHeadConfig[0]);
-    const data = updateFilter(oldCol, getCtrlData(col, change, 3));
+    const oldCol = headConfigToInternal(formHeadConfig[0], 0);
+    const data = updateSingleFIlter(oldCol, getCtrlData(col, change, 3));
     const newCol = data.item;
 
     // ------------------------------------------
@@ -256,7 +256,7 @@ test( //  #5
     // ------------------------------------------
     // Revert the last change and check the results
 
-    const newData = updateFilter(newCol, getCtrlData(col, change, 0));
+    const newData = updateSingleFIlter(newCol, getCtrlData(col, change, 0));
     expect(newData.hasChanged).toBeTruthy();
     expect(newData.item.max).toEqual(0);
     expect(newData.item.skip).toEqual(true);
@@ -264,7 +264,7 @@ test( //  #5
 );
 
 test( //  #6
-  'updateFilter() test "option" filter update',
+  'updateSingleFIlter() test "option" filter update',
   () => {
     const col = 'permissionLevel';
     const change = 'option';
@@ -285,8 +285,8 @@ test( //  #6
       { id: 5, mode: 1 }
     ];
     const ctrl = getCtrlData(col, change);
-    const oldCol = headConfigToInternal(adminHeadConfig[14]);
-    const data = updateFilter(oldCol, { ...ctrl, options: newOpt });
+    const oldCol = headConfigToInternal(adminHeadConfig[14], 14);
+    const data = updateSingleFIlter(oldCol, { ...ctrl, options: newOpt });
     const newCol = data.item;
 
     // ------------------------------------------
@@ -294,7 +294,7 @@ test( //  #6
     // expected
 
     expect(oldCol).not.toEqual(newCol);
-    expect(oldCol.skip).toEqual(true);
+    expect(oldCol.skip).toEqual(false);
     expect(oldCol.max).toEqual(0);
 
     // ------------------------------------------
@@ -334,7 +334,7 @@ test( //  #6
     // Revert the last change and check the results
 
     const newCtrl =  getCtrlData(col, change);
-    const newData = updateFilter(newCol, { ...newCtrl, options: oldOpt });
+    const newData = updateSingleFIlter(newCol, { ...newCtrl, options: oldOpt });
     expect(newData.hasChanged).toBeTruthy();
     expect(newData.item.options).toEqual(oldCol.options);
     expect(newData.item.skip).toEqual(false);
@@ -342,12 +342,12 @@ test( //  #6
 );
 
 test( //  #7
-  'updateFilter() test "filter on empty" filter update',
+  'updateSingleFIlter() test "filter on empty" filter update',
   () => {
     const col = 'name';
     const change = 'filter-on-empty';
-    const oldCol = headConfigToInternal(formHeadConfig[1]);
-    const data = updateFilter(oldCol, getCtrlData(col, change));
+    const oldCol = headConfigToInternal(formHeadConfig[1], 1);
+    const data = updateSingleFIlter(oldCol, getCtrlData(col, change));
     const newCol = data.item;
 
     // ------------------------------------------
@@ -394,7 +394,7 @@ test( //  #7
     // ------------------------------------------
     // Revert the last change and check the results
 
-    const newData = updateFilter(newCol, getCtrlData(col, change));
+    const newData = updateSingleFIlter(newCol, getCtrlData(col, change));
     expect(newData.hasChanged).toBeTruthy();
     expect(newData.item.filterOnEmpty).toEqual(false);
     expect(newData.item.skip).toEqual(true);
@@ -402,12 +402,12 @@ test( //  #7
 );
 
 test( //  #8
-  'updateFilter() test "is column (No toggle column)" filter update',
+  'updateSingleFIlter() test "is column (No toggle column)" filter update',
   () => {
     const col = 'name';
     const change = 'is-column';
-    const oldCol = headConfigToInternal(formHeadConfig[1]);
-    const data = updateFilter(oldCol, getCtrlData(col, change));
+    const oldCol = headConfigToInternal(formHeadConfig[1], 1);
+    const data = updateSingleFIlter(oldCol, getCtrlData(col, change));
     const newCol = data.item;
 
     // ------------------------------------------
@@ -423,12 +423,12 @@ test( //  #8
 );
 
 test( //  #9
-  'updateFilter() test "is column (allow toggle column)" filter update',
+  'updateSingleFIlter() test "is column (allow toggle column)" filter update',
   () => {
     const col = 'name';
     const change = 'is-column';
-    const oldCol = headConfigToInternal(formHeadConfig[1]);
-    const data = updateFilter(oldCol, getCtrlData(col, change), true);
+    const oldCol = headConfigToInternal(formHeadConfig[1], 1);
+    const data = updateSingleFIlter(oldCol, getCtrlData(col, change), true);
     const newCol = data.item;
 
     // ------------------------------------------
@@ -475,7 +475,7 @@ test( //  #9
     // ------------------------------------------
     // Revert the last change and check the results
 
-    const newData = updateFilter(newCol, getCtrlData(col, change), true);
+    const newData = updateSingleFIlter(newCol, getCtrlData(col, change), true);
 
     expect(newData.hasChanged).toBeTruthy();
     expect(newData.item.isColumn).toEqual(true);
@@ -484,12 +484,12 @@ test( //  #9
 );
 
 test( // #10
-  'updateFilter() test "in export" filter update',
+  'updateSingleFIlter() test "in export" filter update',
   () => {
     const col = 'name';
     const change = 'in-export';
-    const oldCol = headConfigToInternal(formHeadConfig[1]);
-    const data = updateFilter(oldCol, getCtrlData(col, change), true);
+    const oldCol = headConfigToInternal(formHeadConfig[1], 1);
+    const data = updateSingleFIlter(oldCol, getCtrlData(col, change), true);
     const newCol = data.item;
 
     // ------------------------------------------
@@ -536,7 +536,7 @@ test( // #10
     // ------------------------------------------
     // Revert the last change and check the results
 
-    const newData = updateFilter(newCol, getCtrlData(col, change), true);
+    const newData = updateSingleFIlter(newCol, getCtrlData(col, change), true);
 
     expect(newData.hasChanged).toBeTruthy();
     expect(newData.item.inExport).toEqual(true);
@@ -545,12 +545,12 @@ test( // #10
 );
 
 test( // #11
-  'updateFilter() test "move column (No move column)" filter update',
+  'updateSingleFIlter() test "move column (No move column)" filter update',
   () => {
     const col = 'name';
     const change = 'move-column';
-    const oldCol = headConfigToInternal(formHeadConfig[1]);
-    const data = updateFilter(oldCol, getCtrlData(col, change, 'up'));
+    const oldCol = headConfigToInternal(formHeadConfig[1], 1);
+    const data = updateSingleFIlter(oldCol, getCtrlData(col, change, 'left'));
     const newCol = data.item;
 
     // ------------------------------------------
@@ -566,12 +566,12 @@ test( // #11
 );
 
 test( // #12
-  'updateFilter() test "move column (allow move column)" filter update',
+  'updateSingleFIlter() test "move column (allow move column)" filter update',
   () => {
     const col = 'name';
     const change = 'move-column';
-    const oldCol = headConfigToInternal(formHeadConfig[1]);
-    const data = updateFilter(oldCol, getCtrlData(col, change, 'up'), true, true);
+    const oldCol = headConfigToInternal(formHeadConfig[1], 1);
+    const data = updateSingleFIlter(oldCol, getCtrlData(col, change, 'left'), true, true);
     const newCol = data.item;
 
     // ------------------------------------------
@@ -587,12 +587,12 @@ test( // #12
 );
 
 test( // #13
-  'updateFilter() test "move export" filter update',
+  'updateSingleFIlter() test "move export" filter update',
   () => {
     const col = 'name';
     const change = 'move-export';
-    const oldCol = headConfigToInternal(formHeadConfig[1]);
-    const data = updateFilter(oldCol, getCtrlData(col, change, 'up'), true, true);
+    const oldCol = headConfigToInternal(formHeadConfig[1], 1);
+    const data = updateSingleFIlter(oldCol, getCtrlData(col, change, 'up'), true, true);
     const newCol = data.item;
 
     // ------------------------------------------

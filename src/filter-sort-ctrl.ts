@@ -10,7 +10,7 @@ import { style } from './css/filter-sort-ctrl.css';
 import { isoStrToTime } from './utilities/sanitise';
 import { getBoolState } from './utilities/general.utils';
 import { getOptMode, getOptStr, getUpdatedFilterOpt, parseOptStr, getDataType } from './utilities/filter-sort.utils';
-import { getInput, getSortBtns, getToggleInput } from './utilities/filter-sort-render.utils';
+import { getColMoveBtns, getInput, getSortBtns, getToggleInput } from './utilities/filter-sort-render.utils';
 import { IFilterSortCtrl, UDataType } from './types/IFilterSortCtrl';
 
 
@@ -161,7 +161,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
    * Whether or not user can toggle column visibility
    */
   @property({ type: Boolean })
-  toggleCol : boolean = false;
+  canToggle : boolean = false;
 
   /**
    * Whether or not user can toggle column visibility
@@ -282,7 +282,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
     // console.log('input:', input);
     // console.log('input.value:', input.value);
     // console.log('input.dataset.type:', input.dataset.type);
-
+    // console.groupEnd()
     switch (input.dataset.type) {
       case 'filter':
         if (this.filter !== input.value) {
@@ -387,7 +387,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
       case 'toggle-is-column':
         this.isColumn = !this.isColumn;
         this.dataset.subtype2 = 'isCol';
-        if (this.toggleCol && !this.isColumn) {
+        if (this.canToggle && !this.isColumn) {
           this.expanded = false;
         }
         ok = true;
@@ -403,7 +403,8 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
 
       case 'move':
         if (this.canMove) {
-          this.dataset.subtype2 = 'move-' + input.value;
+          this.filter = input.value;
+          this.dataset.subtype2 = 'move-column';
           ok = true
         }
     }
@@ -497,7 +498,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
     //   helpClass = ' fields--help';
     //   helpBlock = helpTxt();
     // }
-    if (this.toggleCol)
+    if (this.canToggle)
     fields.push(
       getToggleInput(
         id,
@@ -518,7 +519,11 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
           ${fields}
         </ul>
         ${helpBlock}
-        ${getSortBtns('sort', this.order, this._handler, undefined, this.label, tabInd)}
+        ${getSortBtns(this.colName, this.order, this._handler, undefined, this.label, tabInd)}
+        ${(this.canMove)
+          ? getColMoveBtns(this.label, this.isFirst, this.isLast, this._handler, tabInd)
+          : ''
+        }
       </div>`;
   }
 

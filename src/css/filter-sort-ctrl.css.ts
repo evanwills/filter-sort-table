@@ -6,6 +6,7 @@ import { cbBtn } from './cb-btn.css';
 import { modal } from './modal.css';
 import { radioSort } from './radio-sort.css';
 import { focusable } from './focusable.css';
+import { moveBtn } from './move-btn.css';
 
 export const style : CSSResult = css`
     :host {
@@ -123,6 +124,19 @@ export const style : CSSResult = css`
 
     ${radioList()}
     ${cbBtn}
+    ${moveBtn}
     ${radioSort}
     ${focusable}
+    .move-btn__wrap--column {
+      --bg-colour: var(--txt-colour);
+      --txt-colour: var(--bg-colour);
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
   `;
