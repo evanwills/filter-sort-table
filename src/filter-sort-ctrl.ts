@@ -164,6 +164,37 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
   toggleCol : boolean = false;
 
   /**
+   * Whether or not user can toggle column visibility
+   */
+  @property({ type: Boolean })
+  canMove : boolean = false;
+
+  /**
+   * Whether or not exclude non empty values
+   */
+  @property({ type: Boolean })
+  filterOnEmpty : boolean = false;
+
+  /**
+   * Whether or not show "Filter on empty" button
+   */
+  @property({ type: Boolean })
+  toggleOnEmpty : boolean = false;
+
+  /**
+   * Whether or not show "Filter on empty" button
+   */
+  @property({ type: Boolean })
+  isFirst : boolean = false;
+
+  /**
+   * Whether or not show "Filter on empty" button
+   */
+  @property({ type: Boolean })
+  isLast : boolean = false;
+
+
+  /**
    * Whether or not initialiasation code still needs to be executed
    */
   @state()
@@ -361,6 +392,20 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
         }
         ok = true;
         break;
+
+      case 'filter-on-empty':
+        if (this.toggleOnEmpty) {
+          this.filterOnEmpty = !this.filterOnEmpty;
+          this.dataset.subtype2 = input.dataset.type;
+          ok = true;
+        }
+        break;
+
+      case 'move':
+        if (this.canMove) {
+          this.dataset.subtype2 = 'move-' + input.value;
+          ok = true
+        }
     }
 
     if (ok === true) {
@@ -425,6 +470,20 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
           (this.dataType === 'datetime'),
           'Filter on full date/time',
           'Filter on short date',
+          this._handler,
+          undefined,
+          tabInd
+        )
+      );
+    }
+    if (this.toggleOnEmpty) {
+      fields.push(
+        getToggleInput(
+          id,
+          'filter-on-empty',
+          this.filterOnEmpty,
+          'Only empty values',
+          'Normal filter',
           this._handler,
           undefined,
           tabInd

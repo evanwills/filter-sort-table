@@ -179,10 +179,9 @@ export interface  IListCtrlItem {
    */
   isColumn: boolean,
   /**
-   * Whether or not this field should be included as a column in the
-   * table
+   * Position of this column within the list of all columns
    */
-  colOrder: number,
+  colOrder ? : number,
   /**
    * Whether or not this field should be included as a column in the
    * table
@@ -244,7 +243,7 @@ export interface  IListCtrlItem {
   /**
    * Order of column in export
    */
-  exportOrder: number
+  exportOrder ? : number
 }
 
 export type FTabTmpl = (tab : TabAccordion) => TemplateResult;

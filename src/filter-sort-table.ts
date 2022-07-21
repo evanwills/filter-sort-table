@@ -8,7 +8,7 @@ import { FEventHandler, IDbEnum, IListCtrlItem, IObjArrStrSimple, IObjScalarX, U
 
 import { style } from './css/filter-sort-table.css';
 
-import { convertSep, filterAndSort, getDataType, getCtrlData, getExportDataURL, getFilterSortCtrlData, headConfigToListCtrl, setExportColOrder, skipFilter, sortExportCols, updateFilters } from './utilities/filter-sort.utils';
+import { convertSep, filterAndSort, getDataType, getCtrlData, getExportDataURL, getFilterSortCtrlData, headConfigToListCtrl, setExportColOrder, sortExportCols, updateFilters, headConfigToInternal } from './utilities/filter-sort.utils';
 import { getMoveBtns, getToggleInput } from './utilities/filter-sort-render.utils';
 import { isInt, isNumber } from './utilities/validation';
 import { isTrue } from './utilities/sanitise';
@@ -63,11 +63,10 @@ export class FilterSortTable extends LitElement {
   toggleCol : boolean = false;
 
   /**
-   * Whether or not user change the order of columns
-   * (visable and hidden)
+   * Whether or not user can change the order of columns
    */
   @property({ type: Boolean })
-  moveCols : boolean = false;
+  canMoveCols : boolean = false;
 
   /**
    * Whether or not to do intialisation stuff
@@ -150,11 +149,14 @@ export class FilterSortTable extends LitElement {
     // console.log('headConfig:', this.headConfig)
     this._headConfig = setExportColOrder(
       this.headConfig.map(
-        (item : IHeadConfig) : IHeadConfigInternal => {
-          return {
-            ...item,
-            skip: skipFilter(item)
-          }
+        (item : IHeadConfig, index : number) : IHeadConfigInternal => {
+          return headConfigToInternal(
+            item,
+            index,
+            this.canMoveCols,
+            index === 0,
+            index + 1 === this.headConfig.length
+          );
         }
       )
     );
@@ -219,7 +221,7 @@ export class FilterSortTable extends LitElement {
     // console.log('cols:', cols)
     const output : Array<IHeadConfigInternal> = [];
 
-    for (let a = 0; a < cols.length; a += 1) {
+    for (let a = 0, c = cols.length, d = c - 1; a < c; a += 1) {
       const col = cols[a] as HTMLElement;
       // console.log('cols[' + a + ']:', cols[a])
 
@@ -261,7 +263,13 @@ export class FilterSortTable extends LitElement {
         exportOrder: (typeof col.dataset.exportOrder === 'string')
           ? parseInt(col.dataset.exportOrder)
           : -1,
-        skip: true
+        skip: true,
+        toggleOnEmpty: (typeof col.dataset.toggleOnEmpty !== 'undefined'),
+        isFirst: a === 0,
+        isLast: a === d,
+        canMove: false,
+        urlField: '',
+        useHandler: false,
       }
 
       if (tmp.type === 'option' && typeof col.dataset.optionlist === 'string' && col.dataset.optionlist !== '') {
@@ -375,7 +383,7 @@ export class FilterSortTable extends LitElement {
         )
       }
       return item;
-    })
+    });
 
     this.tableData = output;
   }
@@ -400,7 +408,7 @@ export class FilterSortTable extends LitElement {
     // console.log('filter:', filter);
     // console.log('filter.value:', filter.value);
     // console.log('filter.dataset.type:', filter.dataset.type);
-    const data = updateFilters(this._headConfig, filter, this.toggleCol, this.moveCols);
+    const data = updateFilters(this._headConfig, filter, this.toggleCol, this.canMoveCols);
 
     if (data.hasChanged) {
       this._headConfig = data.filters;
@@ -585,12 +593,14 @@ export class FilterSortTable extends LitElement {
                           dataType="${col.type}"
                           data-dataType="${col.type}"
                           filter="${col.filter}"
+                          filterOnEmpty="${col.filterOnEmpty}"
                           min="${col.min}"
                           max="${col.max}"
                           bool="${col.bool}"
                           order="${col.order}"
                           iscolumn="${col.isColumn}"
                          ?togglecol="${this.toggleCol}"
+                          toggleOnEmpty="${col.toggleOnEmpty}"
                          .statedata=${col.options}
                          .options=${options}
                          @change=${this._handler}>

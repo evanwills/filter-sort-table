@@ -482,24 +482,6 @@ export const getDataType = (input : string) : UDataType => {
 }
 
 /**
- * Extract data from Filter Sort Control component into a simple
- * object that can be used in pure functions.
- *
- * @param filter Filter Sort Control web component object
- *
- * @returns Useful data from Filter Sort Control component in a
- *          simple object
- */
-export const getHeadConfigInt = (ctrl : IHeadConfig|IHeadConfigInternal) : IHeadConfigInternal => {
-  return {
-    ...ctrl,
-    skip: (typeof ctrl.skip === 'boolean')
-      ? ctrl.skip
-      : skipFilter(ctrl)
-  }
-}
-
-/**
  * Get data that mimics data from a Filter Sort Control component to
  * be used when events are triggered by user interaction with
  * non-<filter-sort-ctrl> inputs
@@ -828,7 +810,6 @@ export const setSortOrder = (
   });
 }
 
-
 /**
  * Update the sort order for any fields affected by the lates sort
  * order change
@@ -894,18 +875,37 @@ export const headConfigToListCtrl = (item: IHeadConfig) : IListCtrlItem => {
 }
 
 /**
- * Convert a IHeadConfig item to a IListCtrlItem
+ * Convert a IHeadConfig item to a headConfigToInternal
  *
  * @param item Head config item
  *
  * @returns
  */
-export const headConfigToInternal = (item: IHeadConfig) : IHeadConfigInternal => {
+export const headConfigToInternal = (item: IHeadConfig, index : number, canMove : boolean = false, isFirst: boolean = false, isLast : boolean = false) : IHeadConfigInternal => {
   return {
     ...item,
-    skip: (typeof item.skip === 'boolean')
-      ? item.skip
-      : true
+    canMove: canMove,
+    colOrder: (typeof item.colOrder !== 'undefined')
+      ? item.colOrder
+      : index,
+    enumList: (typeof item.enumList !== 'undefined')
+      ? item.enumList
+      : [],
+    exportOrder: (typeof item.exportOrder !== 'undefined')
+      ? item.exportOrder
+      : index,
+    skip: skipFilter(item),
+    isFirst: isFirst,
+    isLast: isLast,
+    toggleOnEmpty: (typeof item.toggleOnEmpty === 'boolean')
+      ? item.toggleOnEmpty
+      : false,
+    urlField: (typeof item.urlField === 'string')
+      ? item.urlField
+      : '',
+    useHandler: (typeof item.useHandler === 'boolean')
+      ? item.useHandler
+      : false
   };
 }
 
