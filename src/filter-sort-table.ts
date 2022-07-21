@@ -252,7 +252,7 @@ export class FilterSortTable extends LitElement {
         order: (typeof col.dataset.order === 'string' && isNumber(col.dataset.order))
           ? getBoolState(col.dataset.order)
           : 0,
-        orderByValue: (typeof col.dataset.orderByValue !== 'undefined'),
+        // orderByValue: (typeof col.dataset.orderByValue !== 'undefined'),
         orderPriority: (typeof col.dataset.orderPriority === 'string' && isNumber(col.dataset.orderPriority))
           ? parseInt(col.dataset.orderPriority)
           : -1,
@@ -733,33 +733,16 @@ export class FilterSortTable extends LitElement {
   }
 
   private _renderExportColCtrl = (tabIndex: UTabIndex, count: number) => (col: IHeadConfig, index: number) : TemplateResult => {
-     getToggleInput(
-      this.id, col.field, col.inExport,
-      'Include ' + col.label, 'Omit ' + col.label,
-      this._toggleExportCol,
-      col.label,
-      tabIndex
-    );
     return html`
       <li class="export-ctrl">
         <span class="cb-btn__wrap">
-          <input
-            type="checkbox"
-            class="cb-btn__input"
-            id="${this.id}__${col.field}"
-            data-type="${col.label}"
-            tabindex="${ifDefined(tabIndex)}"
-           ?checked="${col.inExport}"
-           @change=${this._toggleExportCol}
-          />
-          <label
-            for="${this.id}__${col.field}"
-            class="cb-btn__label"
-            title="${col.label}"
-          >${(col.inExport)
-              ? 'Include ' + col.label
-              : 'Omit ' + col.label
-          }</label>
+          ${getToggleInput(
+            this.id, col.field, col.inExport,
+            'Include ' + col.label, 'Omit ' + col.label,
+            this._toggleExportCol,
+            col.label,
+            tabIndex
+          )}
         </span>
         ${getMoveBtns(
           col.field,

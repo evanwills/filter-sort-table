@@ -522,9 +522,20 @@ export const timeToIsoStr = (time: number, dateOnly : boolean = false) : string 
  * @returns Number of seconds since unix epoc
  */
 export const isoStrToTime = (dateTime: string) : number => {
-  return (dateTime === '')
-    ? 0
-    : Math.round(new Date(dateTime).getTime() / 1000);
+  if (dateTime === '') {
+    return 0;
+  } else {
+    let _dateTime : string = dateTime;
+
+    if (_dateTime.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)) {
+      // Make sure date is the start of the day.
+      // I think browsers use GMT midnight for start of day if local
+      // time is not specified
+      _dateTime += 'T00:00:00';
+    }
+
+    return Math.round(new Date(_dateTime).getTime() / 1000);
+  }
 }
 
 /**

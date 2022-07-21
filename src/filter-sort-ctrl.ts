@@ -263,6 +263,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
         break;
 
       case 'min':
+        console.log('input.value:', input.value);
         val = (this.dataType === 'number')
           ? parseInt(input.value)
           : isoStrToTime(input.value);
@@ -272,28 +273,37 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
           this.value = val;
           ok = true;
           this.dataset.subtype2 = 'min';
+
+          if (this.dataType === 'date' && this.showMinMax === false) {
+            // When filtering on date alone, we want max to
+            // include the day specified by the date, so we'll
+            // add 24 hours worth of seconds to make sure the
+            // filter works as expected
+            this.max = this.min + 86399;
+          }
+
+          if (this.max !== 0 && this.max < this.min) {
+            this.max = this.min;
+          }
         }
         break;
 
       case 'max':
+        console.log('input.value:', input.value);
         val = (this.dataType === 'number')
           ? parseInt(input.value)
           : isoStrToTime(input.value);
         // val = parseInt(input.value);
-
-        if (this.dataType === 'date') {
-          // When filtering on date alone, we want max to
-          // include the day specified by the date, so we'll
-          // add 24 hours worth of seconds to make sure the
-          // filter works as expected
-          this.max += 86399;
-        }
 
         if (this.max !== val) {
           this.max = val;
           this.value = val;
           ok = true;
           this.dataset.subtype2 = 'max';
+
+          if (this.min !== 0 && this.min > this.max) {
+            this.min = this.max;
+          }
         }
         break;
 
@@ -329,6 +339,12 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
 
       case 'toggle-min-max':
         this.showMinMax = !this.showMinMax;
+        if (!this.showMinMax) {
+          ok = true;
+          this.dataset.subtype2 = 'min-max';
+          this.min = 0;
+          this.max = 0;
+        }
         break;
 
       case 'toggle-date':

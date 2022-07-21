@@ -62,6 +62,9 @@ export const helpTxt = () : TemplateResult => {
         ? new Date(value as number).toISOString()
         : '';
       _type = 'date';
+      if (field === 'filter') {
+        field = 'min';
+      }
       break;
 
     case 'datetime':
