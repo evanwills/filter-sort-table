@@ -475,7 +475,7 @@ export const getDataType = (input : string) : UDataType => {
       return _input;
 
     default:
-      console.error('Could not match data type: "' + input + '"');
+      // console.error('Could not match data type: "' + input + '"');
       return 'text';
   }
 }
@@ -672,7 +672,7 @@ export const updateFilter = (
       case 'in-export':
         hasChanged = true;
         // console.log('output.isColumn (before):', output.isColumn)
-        output.export = !output.export;
+        output.inExport = !output.inExport;
         // console.log('output.isColumn (after):', output.isColumn)
         break;
 
@@ -887,9 +887,9 @@ export const headConfigToListCtrl = (item: IHeadConfig) : IListCtrlItem => {
     bool: item.bool,
     options: item.options,
     order: item.order,
-    orderByValue: item.orderByValue,
+    // orderByValue: item.orderByValue,
     orderPriority: item.orderPriority,
-    export: item.export,
+    inExport: item.inExport,
     exportOrder: item.exportOrder,
     isColumn: item.isColumn,
     colOrder: item.colOrder,
@@ -1043,7 +1043,7 @@ export const getExportDataURL = (
    *
    * @var exportCols
    */
-  const exportCols : Array<IHeadConfigInternal> = setExportColOrder(cols.filter((col: IHeadConfigInternal) => col.export));
+  const exportCols : Array<IHeadConfigInternal> = setExportColOrder(cols.filter((col: IHeadConfigInternal) => col.inExport));
 
 
   // Sort the columns so they're in the right order for exporting.

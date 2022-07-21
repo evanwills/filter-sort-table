@@ -257,7 +257,7 @@ export class FilterSortTable extends LitElement {
           ? parseInt(col.dataset.orderPriority)
           : -1,
         filterOnEmpty: (typeof col.dataset.orderPriority !== 'undefined'),
-        export: (typeof col.dataset.export !== 'undefined'),
+        inExport: (typeof col.dataset.inExport !== 'undefined'),
         exportOrder: (typeof col.dataset.exportOrder === 'string')
           ? parseInt(col.dataset.exportOrder)
           : -1,
@@ -734,7 +734,7 @@ export class FilterSortTable extends LitElement {
 
   private _renderExportColCtrl = (tabIndex: UTabIndex, count: number) => (col: IHeadConfig, index: number) : TemplateResult => {
      getToggleInput(
-      this.id, col.field, col.export,
+      this.id, col.field, col.inExport,
       'Include ' + col.label, 'Omit ' + col.label,
       this._toggleExportCol,
       col.label,
@@ -749,14 +749,14 @@ export class FilterSortTable extends LitElement {
             id="${this.id}__${col.field}"
             data-type="${col.label}"
             tabindex="${ifDefined(tabIndex)}"
-           ?checked="${col.export}"
+           ?checked="${col.inExport}"
            @change=${this._toggleExportCol}
           />
           <label
             for="${this.id}__${col.field}"
             class="cb-btn__label"
             title="${col.label}"
-          >${(col.export)
+          >${(col.inExport)
               ? 'Include ' + col.label
               : 'Omit ' + col.label
           }</label>

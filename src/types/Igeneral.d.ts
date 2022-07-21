@@ -225,10 +225,14 @@ export interface  IListCtrlItem {
    * for fixed option fields, whether or not to order option label
    * or value
    */
-  orderByValue: boolean,
+  // orderByValue: boolean,
   /**
    * The order in which sorting occurs
-   * The lower the priority the earlier it gets sorted
+   *
+   * The lower the priority the earlier it gets sorted and thus, the
+   * less effect it has on the final sorted list. The higher the
+   * priority the later it gets sorted and the greater the impact on
+   * the final sorted list
    *
    * -1 = no sorting
    */
@@ -236,7 +240,7 @@ export interface  IListCtrlItem {
   /**
    * Whether or not to include this field export file
    */
-  export: boolean,
+  inExport: boolean,
   /**
    * Order of column in export
    */
