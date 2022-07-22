@@ -5,6 +5,7 @@ export const moveBtn = css`
   .move-btn__wrap {
     display: flex;
     flex-direction: column;
+    align-items: center;
     width: 1.5rem;
   }
   .move-btn {
@@ -27,6 +28,14 @@ export const moveBtn = css`
     padding: 0.1rem;
     text-indent: -0.35rem;
     width: 1rem;
+  }
+  .move-btn--up,
+  .move-btn--left {
+    align-self: flex-start;
+  }
+  .move-btn--down,
+  .move-btn--right {
+    align-self: flex-end;
   }
   .move-btn--up::before {
     content: '\u25B4';

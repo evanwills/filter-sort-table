@@ -24,6 +24,8 @@ export const style = css`
     --export-text-colour: #fff;
     --true-icon: "\u2713";
     --false-icon: "\u2717";
+    --over-colour: rgba(0, 0, 0, 0.85);
+    --over-colour--rev: rgba(255, 255, 255, 0.85);
     --sticky-v-offset: 0;
   }
   table-sort-ctrl {
@@ -127,16 +129,6 @@ export const style = css`
     padding: 0.5rem;
     position: relative;
   }
-  .extra__list {
-    height: 100%;
-    list-style: none;
-    max-height: calc(${maxHeight}rem - 5rem);
-    margin: -0.75rem -2rem -2rem -2rem;
-    overflow-y: auto;
-    padding: 1rem 0 0 0;
-    position: relative;
-    z-index: 20;
-  }
   .wrap li {
     padding: var(--cell-v-padding) 1rem;
     margin: 0;
@@ -155,9 +147,25 @@ export const style = css`
     width: 2rem;
     z-index: 100;
   }
+  .extra__list {
+    height: 100%;
+    list-style: none;
+    /* max-height: calc(${maxHeight}rem - 5rem); */
+    /* margin: -0.75rem -2rem -2rem -2rem; */
+    margin: 0;
+    /* overflow-y: auto; */
+    /* padding: 1rem 0 0 0; */
+    padding: 0;
+    position: relative;
+    z-index: 20;
+  }
   .extra__list__wrap {
     position: relative;
   }
+  .extra__list > li {
+    position: relative;
+  }
+  /*
   .extra__list__wrap::after {
     background: linear-gradient(rgba(255, 255,255, 1), rgba(255, 255,255, 0.7), rgba(255, 255, 255, 0));
     top: 0;
@@ -170,6 +178,7 @@ export const style = css`
     width: calc(100% + 3rem);
     z-index: 1000;
   }
+  */
   .extra-open {
     color: var(--txt-colour)
     cursor: pointer;
@@ -223,8 +232,7 @@ export const style = css`
 
   .export-ctrl {
     display: grid;
-    grid-template-areas: "toggle up"
-                         "toggle down";
+    grid-template-areas: "toggle move";
     grid-template-columns: 1fr 1.5rem;
     grid-template-rows: auto auto;
   }
@@ -232,11 +240,9 @@ export const style = css`
     grid-area: toggle;
     align-self: center;
   }
-  .export-up {
-    grid-area: up;
-  }
-  .export-down {
-    grid-area: down;
+  .export-move {
+    grid-area: move;
+    align-self: stretch;
   }
   .sep-ctrl {
     display: flex;

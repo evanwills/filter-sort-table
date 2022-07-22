@@ -410,11 +410,12 @@ export const getExportMoveBtns = (
   isBottom: boolean,
   handler : FEventHandler,
   tabIndex: UTabIndex = undefined,
-  childID: number|undefined = undefined
+  childID: number|undefined = undefined,
+  wrapClass: string = ''
 ) : TemplateResult|string => {
   return (!isTop || !isBottom)
     ? html`
-        <span class="move-btn__wrap" role="group">
+        <span class="move-btn__wrap ${wrapClass}" role="group">
           ${(!isTop)
             ? html`
                 <button value="up"

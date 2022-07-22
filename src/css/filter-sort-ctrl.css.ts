@@ -69,6 +69,10 @@ export const style : CSSResult = css`
       grid-template-areas: 'fields  sortCtl'
                            ' help      .';
     }
+    .field--always-expanded.field--can-move {
+      position: relative;
+      padding-bottom: 1rem;
+    }
     .fields .fields-list {
       grid-area: fields;
       list-style-type: none;

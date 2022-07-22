@@ -205,7 +205,9 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
   // private oldOpt : string = '';
   public filteredOptions : Array<IListCtrlOptionItem> = [];
 
-  static styles : CSSResult = style
+  static styles : CSSResult = style;
+
+  private _windowHeight : number = 0;
 
 
   /**
@@ -262,6 +264,9 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
    */
   private _toggleExpanded(_e : Event): void {
     this.expanded = !this.expanded
+    console.log('window:', window)
+    console.log('window.innerHeight:', window.innerHeight);
+    this._windowHeight = window.innerHeight;
   }
 
   /**
@@ -385,12 +390,12 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
           break;
 
       case 'toggle-is-column':
-        this.isColumn = !this.isColumn;
-        this.dataset.subtype2 = 'isCol';
         if (this.canToggle && !this.isColumn) {
           this.expanded = false;
+          this.isColumn = !this.isColumn;
+          this.dataset.subtype2 = 'isCol';
+          ok = true;
         }
-        ok = true;
         break;
 
       case 'filter-on-empty':
@@ -405,6 +410,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
         if (this.canMove) {
           this.filter = input.value;
           this.dataset.subtype2 = 'move-column';
+          this.expanded = false;
           ok = true
         }
     }
@@ -423,11 +429,18 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
 
   private _renderUI(id : string) : TemplateResult {
     const tabInd = this._getTabInd();
+    let always = (this.alwaysExpanded)
+      ? ' field--always-expanded'
+      : '';
     let helpBlock : TemplateResult|string = '';
     let helpClass : string = '';
     let toggleMinMax = false;
     let toggleFullDate = false;
     let allowMinMax = false;
+
+    always += (this.canMove)
+      ? ' field--can-move'
+      : '';
 
     switch (this.dataType) {
       case 'number':
@@ -498,23 +511,24 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
     //   helpClass = ' fields--help';
     //   helpBlock = helpTxt();
     // }
-    if (this.canToggle)
-    fields.push(
-      getToggleInput(
-        id,
-        'toggle-is-column',
-        this.isColumn,
-        'Show as column',
-        'Hide column',
-        this._handler,
-        undefined,
-        tabInd
-      )
-    );
+    if (this.canToggle) {
+      fields.push(
+        getToggleInput(
+          id,
+          'toggle-is-column',
+          this.isColumn,
+          'Show as column',
+          'Hide column',
+          this._handler,
+          undefined,
+          tabInd
+        )
+      );
+    }
 
     return html`
       <h3 id="${id}--grp-label"><span class="sr-only">Filter and sort:</span> ${this.label}</h3>
-      <div role="group" aria-labelledby="${id}--grp-label" class="fields${helpClass}">
+      <div role="group" aria-labelledby="${id}--grp-label" class="fields${helpClass}${always}">
         <ul class="fields-list">
           ${fields}
         </ul>
@@ -571,9 +585,11 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
               <span class="sr-only">${btnTxt}</span>
             </button>
           </th>
-          <div class="wrap wrap--${state}" aria-hidden="${!this.expanded}">
+          <div class="wrap wrap--${state}" aria-hidden="${!this.expanded}" style="--max-modal-height: calc(${this._windowHeight}px - 4rem);">
             <button class="btn-close" @click=${this._toggleExpanded} tabindex="${ifDefined(this._getTabInd())}">${btnTxt}</button>
-            ${ui}
+            <div class="wrap__inner">
+              ${ui}
+            </div>
           </div>
           <button class="bg-close bg-close--${state}" @click=${this._toggleExpanded} aria-hidden="${!this.expanded}" tabindex="${ifDefined(this._getTabInd())}">${btnTxt}</button>
         `

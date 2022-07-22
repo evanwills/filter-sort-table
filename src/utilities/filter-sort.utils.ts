@@ -725,14 +725,14 @@ export const updateAllFilters = (
   } else if (moveExport) {
     output = moveExportCol(output, ctrl.colName, ctrl.filter as string)
   } else if (moveCol) {
-    console.group('updateAllFilters()')
-    console.log('output (before):', output);
-    console.log('ctrl:', ctrl);
-    console.log('ctrl.colName:', ctrl.colName);
-    console.log('ctrl.filter:', ctrl.filter);
+    // console.group('updateAllFilters()')
+    // console.log('output (before):', output);
+    // console.log('ctrl:', ctrl);
+    // console.log('ctrl.colName:', ctrl.colName);
+    // console.log('ctrl.filter:', ctrl.filter);
     output = moveTableCol(output, ctrl.colName, ctrl.filter as string)
-    console.log('output (after):', output);
-    console.groupEnd();
+    // console.log('output (after):', output);
+    // console.groupEnd();
   }
 
   return {

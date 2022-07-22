@@ -128,6 +128,8 @@ export class FilterSortTable extends LitElement {
 
   static styles = style;
 
+  private _windowHeight : number = 0;
+
   // ======================================================
   // Start private methods
 
@@ -358,13 +360,12 @@ export class FilterSortTable extends LitElement {
                   options[ctrlItem.field].push(_val as string)
                 }
               }
-
           }
 
           tmp[this._headConfig[b].field] = _val;
         }
-
       }
+
       output.push(tmp);
       // console.log('cols[' + a + ']', cols[a])
     }
@@ -433,10 +434,12 @@ export class FilterSortTable extends LitElement {
     switch (btn.value) {
       case 'extra':
         this.showExtra = !this.showExtra;
+        this._windowHeight = window.innerHeight;
         break;
 
       case 'export':
         this.showExport = !this.showExport;
+        this._windowHeight = window.innerHeight;
         break;
 
       case 'up':
@@ -695,43 +698,46 @@ export class FilterSortTable extends LitElement {
 
     return html`
       <button @click=${this._btnClickHandler} class="extra-open focusable" value="extra"><span class="sr-only">Show extra filters</span></button>
-      <div class="wrap wrap--${show}">
+      <div class="wrap wrap--${show}" style="--max-modal-height: calc(${this._windowHeight}px - 4rem);">
         <button class="btn-close btn-close--${show} focusable"
                 value="extra"
                 tabindex="${ifDefined(tabIndex)}"
                @click=${this._btnClickHandler}>
           <span class="sr-only">Hide extra filters</span>
         </button>
-        <h2>Filters for hidden columns</h2>
-        <div class="extra__list__wrap">
-          <ul class="extra__list">
-            ${this._headConfig.filter(
-              (col: IHeadConfig) => (!col.isColumn && col.isFilter)
-            ).map(
-              (col: IHeadConfig) : TemplateResult => html`
-                <li>
-                  <filter-sort-ctrl colname="${col.field}"
-                                    label="${col.label}"
-                                    dataType="${col.type}"
-                                    data-dataType="${col.type}"
-                                    filter="${col.filter}"
-                                    min="${col.min}"
-                                    max="${col.max}"
-                                    bool="${col.bool}"
-                                    order="${col.order}"
-                                    iscolumn="${col.isColumn}"
-                                   ?togglecols="${this.toggleCols}"
-                                   .statedata=${col.options}
-                                   .options=${col.enumList}
-                                   @change=${this._handler}
-                                   ?expanded=${this.showExtra}
-                                    alwaysExpanded>
-                    ${col.label}
-                  </filter-sort-ctrl>
-                </li>`
-          )}
-        </ul>
+        <div class="wrap__inner">
+          <h2>Filters for hidden columns</h2>
+          <div class="extra__list__wrap">
+            <ul class="extra__list">
+              ${this._headConfig.filter(
+                (col: IHeadConfig) => (!col.isColumn && col.isFilter)
+              ).map(
+                (col: IHeadConfig) : TemplateResult => html`
+                  <li>
+                    <filter-sort-ctrl colname="${col.field}"
+                                      label="${col.label}"
+                                      dataType="${col.type}"
+                                      data-dataType="${col.type}"
+                                      filter="${col.filter}"
+                                      min="${col.min}"
+                                      max="${col.max}"
+                                      bool="${col.bool}"
+                                      order="${col.order}"
+                                      iscolumn="${col.isColumn}"
+                                     ?togglecols="${this.toggleCols}"
+                                     ?canMove="${this.moveCols}"
+                                     .statedata=${col.options}
+                                     .options=${col.enumList}
+                                     @change=${this._handler}
+                                     ?expanded=${this.showExtra}
+                                      alwaysExpanded>
+                      ${col.label}
+                    </filter-sort-ctrl>
+                  </li>`
+              )}
+            </ul>
 
+          </div>
         </div>
       </div>
       <button class="bg-close bg-close--${show}"
@@ -761,7 +767,9 @@ export class FilterSortTable extends LitElement {
           (index === 0),
           (index === (count - 1)),
           this._btnClickHandler,
-          tabIndex
+          tabIndex,
+          undefined,
+          'export-move'
         )}
       </li>
   `;
@@ -788,53 +796,55 @@ export class FilterSortTable extends LitElement {
              @click=${this._btnClickHandler}>
         Export
       </button>
-      <div class="wrap wrap--${show}">
+      <div class="wrap wrap--${show}" style="--max-modal-height: calc(${this._windowHeight}px - 4rem);">
         <button class="btn-close btn-close--${show} focusable"
                 value="export"
                 tabindex="${tabIndex}"
                @click=${this._btnClickHandler}>
           <span class="sr-only">Hide export control</span>
         </button>
-        <h2>Manage exported columns</h2>
-        <div class="extra__list__wrap">
-          <ul class="extra__list">
-            <li class="sep-ctrl">
-              <label for="${this.id}__colSep" class="sep-ctrl__label">Column seperator:</label>
-              <input type="text"
-                     id="${this.id}__colSep"
-                     value="${convertSep(this.colSep, true)}"
-                     maxlength="4"
-                     data-type="column"
-                     tabindex="${ifDefined(tabIndex)}"
-                     size="2"
-                    @change=${this._updateSep} />
-            </li>
-            <li class="sep-ctrl">
-              <label for="${this.id}__rowSep" class="sep-ctrl__label">Row seperator:</label>
-              <input type="text"
-                     id="${this.id}__rowSep"
-                     value="${convertSep(this.rowSep, true)}"
-                     maxlength="4"
-                     data-type="row"
-                     tabindex="${ifDefined(tabIndex)}"
-                     size="2"
-                    @change=${this._updateSep} />
-            </li>
-            ${repeat(
-              cols,
-              (col : IHeadConfig) => col.field,
-              this._renderExportColCtrl(tabIndex, cols.length)
-            )}
-          </ul>
+        <div class="wrap__inner">
+          <h2>Manage exported columns</h2>
+          <div class="extra__list__wrap">
+            <ul class="extra__list">
+              <li class="sep-ctrl">
+                <label for="${this.id}__colSep" class="sep-ctrl__label">Column seperator:</label>
+                <input type="text"
+                      id="${this.id}__colSep"
+                      value="${convertSep(this.colSep, true)}"
+                      maxlength="4"
+                      data-type="column"
+                      tabindex="${ifDefined(tabIndex)}"
+                      size="2"
+                      @change=${this._updateSep} />
+              </li>
+              <li class="sep-ctrl">
+                <label for="${this.id}__rowSep" class="sep-ctrl__label">Row seperator:</label>
+                <input type="text"
+                      id="${this.id}__rowSep"
+                      value="${convertSep(this.rowSep, true)}"
+                      maxlength="4"
+                      data-type="row"
+                      tabindex="${ifDefined(tabIndex)}"
+                      size="2"
+                      @change=${this._updateSep} />
+              </li>
+              ${repeat(
+                cols,
+                (col : IHeadConfig) => col.field,
+                this._renderExportColCtrl(tabIndex, cols.length)
+              )}
+            </ul>
+          </div>
+          <p class="download__wrap">
+            <a href="#"
+              class="download focusable"
+              tabindex="${ifDefined(tabIndex)}"
+              @click=${this._download}>
+              Download
+            </a>
+          </p>
         </div>
-        <p class="download__wrap">
-          <a href="#"
-             class="download focusable"
-             tabindex="${ifDefined(tabIndex)}"
-            @click=${this._download}>
-            Download
-          </a>
-        </p>
       </div>
       <button class="bg-close bg-close--${show}"
               value="export"

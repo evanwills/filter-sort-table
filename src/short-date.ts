@@ -73,11 +73,13 @@ export class ShortDate extends LitElement {
   private _timer : number = -1;
   private _fullDate : string = '';
   private _shortDate : string = '';
-  private _short : DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
-  private _long : DateTimeFormatOptions = {
-    hour12: true, hour: 'numeric', minute: 'numeric', second: 'numeric',
-    weekday: 'short', day: 'numeric', month: 'long', year: 'numeric'
-  };
+  // private _short : DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+  // private _short  = { day: 'numeric', month: 'short', year: 'numeric' };
+  // private _long : DateTimeFormatOptions = {
+  // private _long = {
+  //   hour12: true, hour: 'numeric', minute: 'numeric', second: 'numeric',
+  //   weekday: 'short', day: 'numeric', month: 'long', year: 'numeric'
+  // };
 
   private _setInterval(start: number) : number {
     const now = Math.round(Date.now() / 1000);
@@ -140,8 +142,11 @@ export class ShortDate extends LitElement {
   render () : TemplateResult|string {
     if (this._fullDate === '') {
       const tmp = new Date(this.timestamp * 1000);
-      this._shortDate = tmp.toLocaleDateString('en-au', this._short);
-      this._fullDate = tmp.toLocaleString('en-au', this._long);
+      this._shortDate = tmp.toLocaleDateString('en-au', { day: 'numeric', month: 'short', year: 'numeric' });
+      this._fullDate = tmp.toLocaleString('en-au', {
+        hour12: true, hour: 'numeric', minute: 'numeric', second: 'numeric',
+        weekday: 'short', day: 'numeric', month: 'long', year: 'numeric'
+      });
     }
     if (this.relative === true && this._timer === -1) {
       this.interval = this._setInterval(this.timestamp);

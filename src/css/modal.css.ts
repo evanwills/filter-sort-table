@@ -7,7 +7,7 @@ export const modal = (maxHeight: number = 35, maxWidth: number = 35) => css`
     color: var(--modal-txt-colour);
     /* height: calc(100% - 2rem); */
     left: 50%;
-    max-height: ${maxHeight}rem;
+    max-height: var(--max-modal-height, ${maxHeight}rem);
     max-width: ${maxWidth}rem;
     opacity: 0;
     padding: 2rem;
@@ -25,6 +25,10 @@ export const modal = (maxHeight: number = 35, maxWidth: number = 35) => css`
   .wrap--show {
     opacity: 1;
     transform: scale(1) translate(-50%, -50%);
+  }
+  .wrap__inner {
+    max-height: calc(var(--max-modal-height) - 4rem);
+    overflow-y: auto;
   }
   .bg-close {
     background-color: var(--over-colour);
