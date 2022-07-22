@@ -3,15 +3,15 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 
 import { UBoolState, IDbEnum, IListCtrlItem, IListCtrlOptionItem, UTabIndex } from './types/Igeneral';
+import { IFilterSortCtrl, UDataType } from './types/IFilterSortCtrl';
 
 import { style } from './css/filter-sort-ctrl.css';
 
-// import { isInt, isNumber, isStr } from './utilities/validation';
 import { isoStrToTime } from './utilities/sanitise';
 import { getBoolState } from './utilities/general.utils';
-import { getOptMode, getOptStr, getUpdatedFilterOpt, parseOptStr, getDataType } from './utilities/filter-sort.utils';
-import { getColMoveBtns, getInput, getSortBtns, getToggleInput } from './utilities/filter-sort-render.utils';
-import { IFilterSortCtrl, UDataType } from './types/IFilterSortCtrl';
+import { getDataType, getOptMode, getOptStr, getUpdatedFilterOpt, parseOptStr } from './utilities/filter-sort-logic.utils';
+import { getInput, getSortBtns } from './utilities/filter-sort-render.utils';
+import { getMoveBtns, getToggleInput } from './utilities/general.view';
 
 
 
@@ -264,8 +264,6 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
    */
   private _toggleExpanded(_e : Event): void {
     this.expanded = !this.expanded
-    console.log('window:', window)
-    console.log('window.innerHeight:', window.innerHeight);
     this._windowHeight = window.innerHeight;
   }
 
@@ -299,7 +297,6 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
         break;
 
       case 'min':
-        console.log('input.value:', input.value);
         val = (this.dataType === 'number')
           ? parseInt(input.value)
           : isoStrToTime(input.value);
@@ -325,7 +322,6 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
         break;
 
       case 'max':
-        console.log('input.value:', input.value);
         val = (this.dataType === 'number')
           ? parseInt(input.value)
           : isoStrToTime(input.value);
@@ -535,7 +531,7 @@ export class FilterSortCtrl extends LitElement implements IFilterSortCtrl {
         ${helpBlock}
         ${getSortBtns(this.colName, this.order, this._handler, undefined, this.label, tabInd)}
         ${(this.canMove)
-          ? getColMoveBtns(this.label, this.isFirst, this.isLast, this._handler, tabInd)
+          ? getMoveBtns('move', this.label, this.isFirst, this.isLast, this._handler, tabInd, true)
           : ''
         }
       </div>`;

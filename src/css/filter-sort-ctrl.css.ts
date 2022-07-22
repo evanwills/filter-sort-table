@@ -24,6 +24,8 @@ export const style : CSSResult = css`
       --true-icon: "+";
       --false-icon: "\u2013";
       --modal-txt-colour: #fff;
+      --modal-bg-colour: #1b1b1b;
+      --modal-overlay-colour: rgba(0, 0, 0, 0.7);
     }
     ${srOnly}
     ${modal(40, 40)}
@@ -131,7 +133,7 @@ export const style : CSSResult = css`
     ${moveBtn}
     ${radioSort}
     ${focusable}
-    .move-btn__wrap--column {
+    .move-btn__wrap--horizontal {
       --bg-colour: var(--txt-colour);
       --txt-colour: var(--bg-colour);
       display: flex;

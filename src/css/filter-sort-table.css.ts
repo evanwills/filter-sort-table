@@ -24,8 +24,11 @@ export const style = css`
     --export-text-colour: #fff;
     --true-icon: "\u2713";
     --false-icon: "\u2717";
-    --over-colour: rgba(0, 0, 0, 0.85);
-    --over-colour--rev: rgba(255, 255, 255, 0.85);
+    --modal-txt-colour: #fff;
+    --modal-bg-colour: #1b1b1b;
+    --modal-overlay-colour: rgba(0, 0, 0, 0.7);
+    --scroll-gradient-top: rgb(27, 27, 27, 1);
+    --scroll-gradient-bottom: rgb(27, 27, 27, 0)
     --sticky-v-offset: 0;
   }
   table-sort-ctrl {

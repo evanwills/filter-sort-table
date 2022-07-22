@@ -2,7 +2,7 @@ import { css } from "lit";
 
 export const modal = (maxHeight: number = 35, maxWidth: number = 35) => css`
   .wrap {
-    background-color: var(--bg-colour);
+    background-color: var(--modal-bg-colour);
     box-sizing: border-box;
     color: var(--modal-txt-colour);
     /* height: calc(100% - 2rem); */
@@ -31,7 +31,7 @@ export const modal = (maxHeight: number = 35, maxWidth: number = 35) => css`
     overflow-y: auto;
   }
   .bg-close {
-    background-color: var(--over-colour);
+    background-color: var(--modal-overlay-colour);
     border-radius; 30rem;
     border: none;
     bottom: 0;

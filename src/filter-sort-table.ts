@@ -3,13 +3,13 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { repeat } from 'lit/directives/repeat.js'
 
-import { IHeadConfig, IHeadConfigInternal } from './types/header-config'
+import { IHeadConfig, IHeadConfigInternal } from './types/IFilterSortCtrl'
 import { FEventHandler, IDbEnum, IListCtrlItem, IObjArrStrSimple, IObjScalarX, UScalar, UTabIndex } from './types/Igeneral';
+import { IFilterSortCtrlData } from './types/IFilterSortCtrl';
 
 import { style } from './css/filter-sort-table.css';
 
-import { convertSep, filterAndSort, getDataType, getCtrlData, getExportDataURL, getFilterSortCtrlData, headConfigToListCtrl, setExportColOrder, sortExportCols, updateAllFilters, headConfigToInternal } from './utilities/filter-sort.utils';
-import { getExportMoveBtns, getToggleInput } from './utilities/filter-sort-render.utils';
+import { convertSep, filterAndSort, getCtrlData, getDataType, getExportDataURL, getFilterSortCtrlData, headConfigToInternal, headConfigToListCtrl, setExportColOrder, sortExportCols, updateAllFilters } from './utilities/filter-sort-logic.utils';
 import { isInt, isNumber } from './utilities/validation';
 import { isTrue } from './utilities/sanitise';
 
@@ -19,7 +19,7 @@ import { ShortDate } from './short-date';
 import './filter-sort-ctrl';
 import './short-date';
 import { getBoolState } from './utilities/general.utils';
-import { IFilterSortCtrlData } from './types/IFilterSortCtrl';
+import { getMoveBtns, getToggleInput } from './utilities/general.view';
 
 /**
  * An example element.
@@ -761,14 +761,14 @@ export class FilterSortTable extends LitElement {
             tabIndex
           )}
         </span>
-        ${getExportMoveBtns(
+        ${getMoveBtns(
           col.field,
           col.label,
           (index === 0),
           (index === (count - 1)),
           this._btnClickHandler,
           tabIndex,
-          undefined,
+          false,
           'export-move'
         )}
       </li>

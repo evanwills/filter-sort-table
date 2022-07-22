@@ -2,15 +2,14 @@
 
 import {
   IDbEnum, IListCtrlItem, IListCtrlOptionItem, IObjNum, IObjScalarX,
-  UBoolState, UDataType
+  UBoolState, UDataType, UScalarX
 } from '../types/Igeneral';
+import { IAllFiltersUpdateResult, IFilterSortCtrlData, IFilterUpdateResult, IHeadConfig, IHeadConfigInternal } from '../types/IFilterSortCtrl';
 
 import { isNumber } from './validation';
 // import { isoStrToTime } from './sanitise';
 import { getBoolState } from './general.utils';
-import { UScalarX } from '../types/Igeneral';
-import { IHeadConfig, IHeadConfigInternal } from '../types/header-config';
-import { IAllFiltersUpdateResult, IFilterSortCtrlData, IFilterUpdateResult } from '../types/IFilterSortCtrl';
+
 import { FilterSortCtrl } from '../filter-sort-ctrl';
 
 /**

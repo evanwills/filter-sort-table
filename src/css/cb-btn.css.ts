@@ -10,7 +10,7 @@ export const cbBtn : CSSResult = css`
   }
   .cb-btn__label {
     display: block;
-    border: var(--line-weight-hvy) solid;
+    border: var(--line-weight-hvy) solid var(--cb-txt-colour);
     max-width: 24rem;
     padding: 0.2rem 1.75rem;
     position: relative;
@@ -18,7 +18,7 @@ export const cbBtn : CSSResult = css`
     width: auto;
   }
   .cb-btn__label::before {
-    border: var(--line-weight-hvy) solid;
+    border: var(--line-weight-hvy) solid var(--cb-txt-colour);
     border-radius: 50%;
     background-color: var(--txt-colour);
     color: var(--bg-colour);

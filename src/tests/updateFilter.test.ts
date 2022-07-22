@@ -1,8 +1,7 @@
-import { getCtrlData, headConfigToInternal, updateSingleFIlter } from "../utilities/filter-sort.utils";
+import { getCtrlData, headConfigToInternal, updateSingleFIlter } from "../utilities/filter-sort-logic.utils";
 import { adminHeadConfig, formHeadConfig } from "../data/form-data";
 import { IListCtrlOptionItem } from "../types/Igeneral";
-// import { IFilterUpdateResult } from '../types/IFilterSortCtrl';
-// import { IHeadConfigInternal } from "../types/header-config";
+// import { IFilterUpdateResult, IHeadConfigInternal } from '../types/IFilterSortCtrl';
 
 
 test( //  #1

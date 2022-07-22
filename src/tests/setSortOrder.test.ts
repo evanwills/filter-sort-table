@@ -1,4 +1,4 @@
-import { setSortOrder } from "../utilities/filter-sort.utils";
+import { setSortOrder } from "../utilities/filter-sort-logic.utils";
 import { formHeadConfig } from "../data/form-data";
 
 test(

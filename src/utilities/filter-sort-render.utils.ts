@@ -1,9 +1,8 @@
-import { html, TemplateResult } from "lit";
-import { ifDefined } from "lit/directives/if-defined.js";
-import { IFilterSortCtrl } from "../types/IFilterSortCtrl";
-import { FEventHandler, IDbEnum, IListCtrlOptionItem, UTabIndex } from "../types/Igeneral";
-import { getOptMode } from "./filter-sort.utils";
-import { isInt } from "./validation";
+import { html, TemplateResult } from 'lit';
+import { ifDefined } from 'lit/directives/if-defined.js';
+import { FEventHandler, IDbEnum, IListCtrlOptionItem, UTabIndex } from '../types/Igeneral';
+import { getOptMode } from './filter-sort-logic.utils';
+import { isInt } from './validation';
 
 
 
@@ -15,146 +14,6 @@ export const helpTxt = () : TemplateResult => {
       <li>To only match the end, use a dollar sign <code>$</code> at the end of the fragment</li>
       <li>To exclude matched items, preceed your fragment with a exclamation mark <code>!</code> at the end of the fragment</li>
     </ul>
-  `;
-}
-
-
-/**
- * Get HTML for a single filter control
- *
- * @param id       ID of wrapper
- * @param label    Label for input
- * @param value    Current value for input
- * @param field    Field input applies to
- * @param data     All the filter control data for the field
- * @param handler  Event handler for toggle
- * @param tabIndex Tab index (if appropriate)
- *
- * @returns HTML for input field
- */
- export const getInput = (
-  id: string, label: string, value : string|number, field: string, data: IFilterSortCtrl, handler: FEventHandler,
-  tabIndex : UTabIndex = undefined
-) : TemplateResult => {
-  const _id = id + '__' + field;
-  let _type : string = data.dataType;
-  let _value = value;
-  let _special : TemplateResult|string = '';
-
-  if (value === 'auto') {
-    switch (field) {
-      case 'filter':
-        _value = data.filter;
-        break;
-      case 'bool':
-        _value = data.bool;
-        break;
-    }
-  }
-  // console.group('_getInput()')
-  // console.log('_value:', _value)
-  // console.log('_type:', _type)
-  // console.log('_id:', _id)
-
-  switch (data.dataType) {
-    case 'date':
-      _value = (isInt(value) && value > 0)
-        ? new Date(value as number).toISOString()
-        : '';
-      _type = 'date';
-      if (field === 'filter') {
-        field = 'min';
-      }
-      break;
-
-    case 'datetime':
-      _value = (isInt(value) && value > 0)
-        ? new Date(value as number).toISOString()
-        : '';
-      _type = 'datetime-local';
-      break;
-
-    case 'bool':
-      _special = incIgnoreExc(_id, _value as number, handler, undefined, 'Include', 'Exclude', tabIndex);
-      break;
-
-    case 'option':
-      // console.log('data.options:', data.options)
-      _special = getOptions(
-        _id,
-        data.options as Array<IDbEnum>,
-        data.filteredOptions,
-        handler,
-        'Include',
-        'Exclude',
-        tabIndex
-      );
-      break;
-  }
-  // console.log('_type:', _type)
-  // console.groupEnd();
-
-  return html`
-    <li>
-      <label for="${_id}" class="filter-label">${label}:</label>
-      ${(_special === '')
-        ? html`<input id="${_id}"
-                      type="${_type}"
-                      value="${_value}"
-                      data-type="${field}"
-                      tabindex="${ifDefined(tabIndex)}"
-                     @keyup=${handler}
-                     @change=${handler}
-                      class="filter-input" />`
-        : _special
-      }
-    </li>
-  `;
-}
-
-/**
- * Get HTML for a checkbox field & label
- *
- * @param id        ID of wrapper
- * @param name      Field name
- * @param isChecked Whether the field is currently checked or not
- * @param trueTxt   Label text for checked state
- * @param falseTxt  Label text for unchecked state
- * @param handler   Event handler for checkbox change
- * @param title     Title attribute for checkbox field
- * @param tabIndex  Tab index (if appropriate)
- *
- * @returns HTML for a checkbox field
- */
-export const getToggleInput = (
-  id : string,
-  name : string,
-  isChecked : boolean,
-  trueTxt : string,
-  falseTxt : string,
-  handler : FEventHandler,
-  title : string|undefined = undefined,
-  tabIndex: number|undefined
-) : TemplateResult => {
-  return html`
-    <li>
-      <span class="cb-btn__wrap">
-        <input
-          type="checkbox"
-          class="cb-btn__input"
-          id="${id}__${name}"
-          tabindex="${ifDefined(tabIndex)}"
-        ?checked="${isChecked}"
-        @change=${handler}
-          data-type="${name}"
-        />
-        <label
-          for="${id}__${name}"
-          class="cb-btn__label"
-          title="${ifDefined(title)}"
-          >${(isChecked) ? trueTxt : falseTxt}</label>
-      </span>
-    </li>
   `;
 }
 
@@ -387,120 +246,94 @@ export const getSortBtns = (
 }
 
 /**
+ * Get HTML for a single filter control
  *
- * @param id       ID of thing to be moved
- * @param label    Label of thing to be moved
- * @param isTop    Whether item is at the top of its list
- * @param isBottom Whether item is at the bottom of its list
- * @param handler  Event handler callback function
- * @param tabIndex Tabindex of buttons.
- *                 `undefined` if buttons are visible
- *                 -1 if buttons are hidden
- * @param childID  If item is a child item, this is the ID of the
- *                 child item.
+ * @param id       ID of wrapper
+ * @param label    Label for input
+ * @param value    Current value for input
+ * @param field    Field input applies to
+ * @param data     All the filter control data for the field
+ * @param handler  Event handler for toggle
+ * @param tabIndex Tab index (if appropriate)
  *
- * @returns If item is not BOTH top & bottom of its list, a template
- *          with one or two move buttons is returned. Otherwise an
- *          empty string is returned
+ * @returns HTML for input field
  */
-export const getExportMoveBtns = (
-  id: string|number,
-  label: string,
-  isTop: boolean,
-  isBottom: boolean,
-  handler : FEventHandler,
-  tabIndex: UTabIndex = undefined,
-  childID: number|undefined = undefined,
-  wrapClass: string = ''
-) : TemplateResult|string => {
-  return (!isTop || !isBottom)
-    ? html`
-        <span class="move-btn__wrap ${wrapClass}" role="group">
-          ${(!isTop)
-            ? html`
-                <button value="up"
-                        class="move-btn move-btn--up focusable"
-                        data-type="${id}"
-                        data-childid="${ifDefined(childID)}"
-                       @click=${handler}
-                        tabindex="${ifDefined(tabIndex)}"
-                        title="Move ${label} up">
-                  <span class="sr-only">Move ${label} up</span>
-                </button>`
-            : ''
-          }
-          ${(!isBottom)
-            ? html`
-                <button value="down"
-                        class="move-btn move-btn--down focusable"
-                        data-type="${id}"
-                        data-childid="${ifDefined(childID)}"
-                       @click=${handler}
-                        tabindex="${ifDefined(tabIndex)}"
-                        title="Move ${label} down">
-                  <span class="sr-only">Move ${label} down</span>
-                </button>`
-            : ''
-          }
-        </span>
-      `
-    : '';
-}
+ export const getInput = (
+  id: string, label: string, value : string|number, field: string, data: IFilterSortCtrl, handler: FEventHandler,
+  tabIndex : UTabIndex = undefined
+) : TemplateResult => {
+  const _id = id + '__' + field;
+  let _type : string = data.dataType;
+  let _value = value;
+  let _special : TemplateResult|string = '';
 
-/**
- *
- * @param label    Label of thing to be moved
- * @param isFirst  Whether item is at the top of its list
- * @param isLast   Whether item is at the bottom of its list
- * @param handler  Event handler callback function
- * @param tabIndex Tabindex of buttons.
- *                 `undefined` if buttons are visible
- *                 -1 if buttons are hidden
- * @param childID  If item is a child item, this is the ID of the
- *                 child item.
- *
- * @returns If item is not BOTH top & bottom of its list, a template
- *          with one or two move buttons is returned. Otherwise an
- *          empty string is returned
- */
- export const getColMoveBtns = (
-  label: string,
-  isFirst: boolean,
-  isLast: boolean,
-  handler : FEventHandler,
-  tabIndex: UTabIndex = undefined,
-  childID: number|undefined = undefined
-) : TemplateResult|string => {
-  return (!isFirst || !isLast)
-    ? html`
-        <span class="move-btn__wrap move-btn__wrap--column" role="group">
-          ${(!isFirst)
-            ? html`
-                <button value="left"
-                        class="move-btn move-btn--left focusable"
-                        data-type="move"
-                        data-childid="${ifDefined(childID)}"
-                       @click=${handler}
-                        tabindex="${ifDefined(tabIndex)}"
-                        title="Move ${label} left">
-                  <span class="sr-only">Move ${label} left</span>
-                </button>`
-            : ''
-          }
-          ${(!isLast)
-            ? html`
-                <button value="right"
-                        class="move-btn move-btn--right focusable"
-                        data-type="move"
-                        data-childid="${ifDefined(childID)}"
-                       @click=${handler}
-                        tabindex="${ifDefined(tabIndex)}"
-                        title="Move ${label} right">
-                  <span class="sr-only">Move ${label} right</span>
-                </button>`
-            : ''
-          }
-        </span>
-      `
-    : '';
+  if (value === 'auto') {
+    switch (field) {
+      case 'filter':
+        _value = data.filter;
+        break;
+      case 'bool':
+        _value = data.bool;
+        break;
+    }
+  }
+  // console.group('_getInput()')
+  // console.log('_value:', _value)
+  // console.log('_type:', _type)
+  // console.log('_id:', _id)
+
+  switch (data.dataType) {
+    case 'date':
+      _value = (isInt(value) && value > 0)
+        ? new Date(value as number).toISOString()
+        : '';
+      _type = 'date';
+      if (field === 'filter') {
+        field = 'min';
+      }
+      break;
+
+    case 'datetime':
+      _value = (isInt(value) && value > 0)
+        ? new Date(value as number).toISOString()
+        : '';
+      _type = 'datetime-local';
+      break;
+
+    case 'bool':
+      _special = incIgnoreExc(_id, _value as number, handler, undefined, 'Include', 'Exclude', tabIndex);
+      break;
+
+    case 'option':
+      // console.log('data.options:', data.options)
+      _special = getOptions(
+        _id,
+        data.options as Array<IDbEnum>,
+        data.filteredOptions,
+        handler,
+        'Include',
+        'Exclude',
+        tabIndex
+      );
+      break;
+  }
+  // console.log('_type:', _type)
+  // console.groupEnd();
+
+  return html`
+    <li>
+      <label for="${_id}" class="filter-label">${label}:</label>
+      ${(_special === '')
+        ? html`<input id="${_id}"
+                      type="${_type}"
+                      value="${_value}"
+                      data-type="${field}"
+                      tabindex="${ifDefined(tabIndex)}"
+                     @keyup=${handler}
+                     @change=${handler}
+                      class="filter-input" />`
+        : _special
+      }
+    </li>
+  `;
 }

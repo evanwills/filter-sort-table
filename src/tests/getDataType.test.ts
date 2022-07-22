@@ -1,5 +1,5 @@
 // import { tableData } from "../data/form-data";
-import { getDataType } from "../utilities/filter-sort.utils";
+import { getDataType } from "../utilities/filter-sort-logic.utils";
 
 test(
   'getDataType() "text" is valid data type',

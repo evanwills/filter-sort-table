@@ -2,12 +2,11 @@
 
 import { TemplateResult } from 'lit';
 import { TabAccordion } from '../view/customElements/tab-accordion';
-import { IAction, IBaseStateItem } from './Iredux-extra';
-
+import { IAction, IBaseStateItem, IListCtrlAction } from './Iredux-extra';
 
 export type UScalar = string | number | boolean;
 export type UScalarA = string | number | boolean | Array<UScalar>;
-export type UScalarX = string | number | boolean | IObjScalarX | Array<string> | Array<any>;
+export type UScalarX = string | number | boolean | IObjScalarX | IListCtrlItem | Array<string> | Array<any>;
 /**
  * For accessibility, focusable items that are not visible, they
  * should not be accessible by tabbing. When a focusable item has
@@ -136,9 +135,6 @@ export interface IEventHandler {
   actions: IObjStr
 }
 
-
-export type UDataType = 'text' | 'number' | 'date' | 'datetime' | 'bool' | 'option' | 'count';
-
 /**
  * Used for boolean filters
  * (equivalent to: ignore | include | exclude)
@@ -147,6 +143,9 @@ export type UDataType = 'text' | 'number' | 'date' | 'datetime' | 'bool' | 'opti
  * (equivalent to: ignore | decending | ascending)
  */
 export type UBoolState = 0 | 1 | -1;
+
+
+export type UDataType = 'text' | 'number' | 'date' | 'datetime' | 'bool' | 'option' | 'count';
 
 export interface IListCtrlOptionItem {
   id: number,

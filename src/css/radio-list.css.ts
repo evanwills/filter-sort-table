@@ -51,11 +51,11 @@ export const radioList = (minWidth: number = 35) : CSSResult => {
     }
 
     .radio-list__wrap > li {
-      // flex-grow: 1;
+      /* flex-grow: 1; */
       list-style-type: none;
       margin: 0;
       padding: 0;
-      // box-sizing: content-box;
+      /* box-sizing: content-box; */
     }
     .radio-list__label {
       /* background-color: var(--bg-colour); */
