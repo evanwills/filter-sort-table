@@ -1,6 +1,7 @@
 import { html, LitElement, TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { repeat } from 'lit/directives/repeat.js'
 
 import { IHeadConfig, IHeadConfigInternal } from './types/IFilterSortCtrl'
@@ -29,9 +30,23 @@ import { getMoveBtns, getToggleInput } from './utilities/general.view';
  */
 @customElement('filter-sort-table')
 export class FilterSortTable extends LitElement {
+  /**
+   * When instantiated by Javascript, `headConfig` is used to pass
+   * column configuration to the component via an array of
+   * [IheadConfig](README.md#iheadconfig) objects.
+   *
+   * When `<filter-sort-table>` tirggers a `change` event,
+   * `headConfig` can used to provide the current state of the
+   * filter/sort controls to the client application (e.g. Redux).
+   */
   @property()
   headConfig : Array<IHeadConfig|IHeadConfigInternal> = [];
 
+  /**
+   * When instantiated by Javascript, `tableData` is used to pass all
+   * the actual data rendered in the table list via an array of
+   * [IObjScalarX](#README.md#iobjscalarx) objects
+   */
   @property()
   tableData : Array<IObjScalarX> = [];
 
@@ -42,17 +57,42 @@ export class FilterSortTable extends LitElement {
   html : boolean = false;
 
   /**
-   * Whether or not to parse inner HTML as Table
+   * Contents of the table's `caption` attribute
    */
   @property({ type: String })
   caption : string = '';
 
+  /**
+   * Provides infomation (to the client application) of what was
+   * last change in the filter/sort controls or export controls
+   *
+   * Options are:
+   * * name of field - when details of a field are modified
+   * * `column-sep`  - When column separator character for export is
+   *                   changed
+   * * `row-sep`     - When row separator character for export is
+   *                   changed
+   */
   @property({ type: String, reflect: true })
   lastFiltered: string = '';
 
+  /**
+   * What was the primary target for the last changed
+   *
+   * Options are:
+   * * `filter`      - something in the filter changed
+   * * `move-column` - table column/filter was moved either left or
+   *                   right
+   * * `is-column`   - Toggle table column visibility
+   * * `move-export` - Export column was moved either left or right
+   * * `in-export`   - Toggle field's inclusion in export data
+   */
   @property({ type: String, reflect: true })
   lastAction: string = '';
 
+  /**
+   * The filter control property that was last changed
+   */
   @property({ type: String, reflect: true })
   lastActionSub: string = '';
 
@@ -110,6 +150,14 @@ export class FilterSortTable extends LitElement {
    */
   @property({ attribute: false })
   linkHandler : FEventHandler|undefined = undefined;
+
+  /**
+   * Many listings show data that can be added to. This allows
+   * clients to pass in a create button so users can easily create
+   * new entries
+   */
+  @property({ attribute: false })
+  createBtn : TemplateResult|string = '';
 
   @state()
   value : IListCtrlItem | string = '';
@@ -528,7 +576,7 @@ export class FilterSortTable extends LitElement {
 
   private _download(_event: Event) : void {
     // _event.preventDefault();
-    const link = _event.target as HTMLLinkElement;
+    const link = _event.target as HTMLAnchorElement;
     const data = getExportDataURL(
       this.tableData, this._headConfig,
       this.colSep, this.rowSep, !this.omitHeaders
@@ -639,10 +687,18 @@ export class FilterSortTable extends LitElement {
         ? (row[col.field] as Array<any>).length
         : row[col.field].toString();
 
-    if (typeof value === 'string' && value.indexOf('@') > -1) {
-      // Make emails split if required
-      const email = value.split('@', 2)
-      value = html`${email[0]}<wbr>@${email[1]}`;
+    if (typeof value === 'string') {
+      if (value.includes('@')) {
+        // Make emails wrap if required
+        const email = value.split('@', 2)
+        value = html`${email[0]}<wbr>@${email[1]}`;
+      } else if (value.includes('-') || value.includes('_')) {
+        // Make potentially long unbroken strings wrap
+        const str = value.replace(/</g, '&lt;').
+                          replace(/>/g, '&gt;').
+                          replace(/(?<=-|_)/g, '<wbr>');
+        value = html`${unsafeHTML(str)}`;
+      }
     }
 
     let _class : string = 'cell--' + col.type;

@@ -86,6 +86,11 @@ export class ShortDate extends LitElement {
     return now - start;
   }
 
+  /**
+   * Set up a series of timers to
+   * @param data
+   * @returns
+   */
   private _updateInterval(data : ShortDate) {
     return function () {
       const interval = data._setInterval(data.timestamp);
@@ -105,13 +110,26 @@ export class ShortDate extends LitElement {
     }
   }
 
+  /**
+   * Get the final human readable item interval string
+   *
+   * @param seconds Number of seconds for the provided unit
+   * @param unit    Unit name
+   *
+   * @returns
+   */
   private _intervalTxtInner(seconds : number, unit : string) : string {
     const tmp =  Math.round(this.interval / seconds);
-    const s = (tmp > 1) ? 's' : '';
+    const s = (tmp !== 1) ? 's' : '';
 
     return tmp + ' ' + unit + s;
   }
 
+  /**
+   * Get human readable time interval string
+   *
+   * @returns
+   */
   private _getIntervalTxt() : string {
     if (this.interval < 1) {
       return 'less than a second';

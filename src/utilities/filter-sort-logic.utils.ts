@@ -188,9 +188,15 @@ const filterOnOptions = (options : Array<IListCtrlOptionItem>, id: number) : boo
 }
 
 /**
- * Test whether or not to
- * @param listCtrl
- * @returns
+ * Test whether or not to skip a filter field entirely when
+ * processing the filters
+ *
+ * This is essentially used to cache the results of the test so it
+ * doesn't need to be performed every time the list gets filtered
+ *
+ * @param listCtrl Filter Control object
+ *
+ * @returns TRUE if filter should be skipped. FALSE otherwise
  */
 export const skipFilter = (listCtrl: IHeadConfig) : boolean => {
   // console.group('skipFilter()')
@@ -1248,12 +1254,21 @@ export const convertSep = (sep : string, toRender: boolean) : string => {
   return sep;
 }
 
-export const getFilterData = (listCtrl : Array<IListCtrlItem>) => (field: string) : IListCtrlItem|null => {
+/**
+ * Get the full filter control object matched by the field name
+ * provided
+ *
+ * @param listCtrls List of filter control objects
+ *
+ * @returns A function that returns a single filter control object
+ *         match by the field name supplied
+ */
+export const getFilterData = (listCtrls : Array<IListCtrlItem>) => (field: string) : IListCtrlItem|null => {
   // console.group(getFilterData)
   // console.log('field:', field)
   // console.log('listCtrl:', listCtrl)
 
-  const tmp = listCtrl.filter((item : IListCtrlItem): boolean => item.field === field)
+  const tmp = listCtrls.filter((item : IListCtrlItem): boolean => item.field === field)
 
   // console.log('tmp:', tmp)
   // console.groupEnd()

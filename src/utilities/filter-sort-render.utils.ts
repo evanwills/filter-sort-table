@@ -1,18 +1,23 @@
 import { html, TemplateResult } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
+import { IFilterSortCtrl } from '../types/IFilterSortCtrl';
 import { FEventHandler, IDbEnum, IListCtrlOptionItem, UTabIndex } from '../types/Igeneral';
 import { getOptMode } from './filter-sort-logic.utils';
 import { isInt } from './validation';
 
 
-
+/**
+ * Get help text about how string filters work to show users
+ *
+ * @returns Simple help info about text filters
+ */
 export const helpTxt = () : TemplateResult => {
   return html`
     <ul class="help-block">
       <li>To filter on multiple text fragments, separate each fragment with a semicolon <code>;</code></li>
       <li>To only match from the start, use a caret <code>^</code> at the start of the fragment</li>
       <li>To only match the end, use a dollar sign <code>$</code> at the end of the fragment</li>
-      <li>To exclude matched items, preceed your fragment with a exclamation mark <code>!</code> at the end of the fragment</li>
+      <li>To exclude matched items, preceed your fragment with a exclamation mark <code>!</code></li>
     </ul>
   `;
 }
@@ -336,4 +341,25 @@ export const getSortBtns = (
       }
     </li>
   `;
+}
+
+/**
+ * Get a "CREATE" button that can be passed to filter-sort-table via
+ * the `.createBtn` attribute
+ *
+ * @param id      ID of create button
+ * @param value   Value of create button
+ * @param handler Click event handler function
+ *
+ * @returns Returns a button template containing classes that
+ *          filter-sort-table can style
+ */
+export const getCreateBtn = (id : string, value: string|number, handler : FEventHandler) : TemplateResult => {
+  return html`
+    <button id="${id}"
+            class="btn btn--create btn--side focusable"
+            value="${value}"
+           @click=${handler}>
+      Create
+    </button>`;
 }

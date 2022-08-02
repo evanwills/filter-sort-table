@@ -92,6 +92,15 @@ export const snakeToCamel = (input : string, start : number = 0) : string => {
   }
 }
 
+/**
+ * Convert human readable text to snake case
+ * (or some other character separated value)
+ *
+ * @param input String to be converted
+ * @param sep   Separator character ("_" by default)
+ *
+ * @returns Snake case string
+ */
 export const textToSnake = (input : string, sep : string = '_') : string => {
   return input.replace(/\s+/g, sep)
 }
@@ -218,7 +227,6 @@ export const makeAttributeSafe = (_attr : string, prefixNum : boolean = false) :
   return _output
 }
 
-
 /**
  * Make a string safe to be used as an ID
  *
@@ -229,7 +237,6 @@ export const makeAttributeSafe = (_attr : string, prefixNum : boolean = false) :
  export const idSafe = (input : string) : string => {
   return makeAttributeSafe(input, true);
 }
-
 
 /**
  * Get string to use as class name for HTML element
@@ -267,6 +274,13 @@ export const makeAttributeSafe = (_attr : string, prefixNum : boolean = false) :
   return _output
 }
 
+/**
+ * Infer truthyness of a value
+ *
+ * @param input Value whose truthyness is to be tested
+ *
+ * @returns TRUE if input passed one of the tests. FALSE otherwise
+ */
 export const isTrue = (input : any) : boolean => {
   // console.group('isTrue()');
   // console.log('input:', input)
@@ -280,16 +294,15 @@ export const isTrue = (input : any) : boolean => {
 
     case 'number':
       // console.groupEnd();
-      return (input >= 1);
+      return (input >= 0);
 
     case 'string':
       if (isNumeric(input)) {
         // console.groupEnd();
-        return (parseFloat(input) >= 1);
+        return (parseFloat(input) >= 0);
       } else {
-        const _tmp = input.toLowerCase();
         // console.groupEnd();
-        return (_tmp === 'true' || _tmp === 'yes' || _tmp === 'on');
+        return (['true', 'yes', 'on', 'ok'].indexOf(input.toLowerCase()) > -1);
       }
 
     default:
@@ -299,7 +312,13 @@ export const isTrue = (input : any) : boolean => {
 
 }
 
-
+/**
+ * Convert boolean value to number
+ *
+ * @param input Value that might be boolean
+ *
+ * @returns '1' if value was deemed to be TRUE. '0' otherwsie
+ */
 export const bool2num = (input: any) : string => {
   // console.group('bool2num()');
   // console.log('input:', input)
@@ -315,29 +334,30 @@ export const bool2num = (input: any) : string => {
 /**
  * Make sure the limit is within range.
  *
- * @param mixed   $input   Value to use a limit
- * @param integer $default Default value to use if unable to get
- *                         new value
- * @param integer $min     Minimum value allowed
- * @param integer $max     Maximum value allowed
+ * @param input      Value to use a limit
+ * @param defaultMax Default value to use if unable to get new value
+ * @param min        Absolute minimum value allowed
+ * @param max        Absolute maximum value allowed
  *
  * @return integer
  */
-export const _charLimit = (input : string|number, _default : number, _min : number, _max : number) : number => {
+export const _charLimit = (
+  input : string|number, defaultMax : number, min : number, max : number
+) : number => {
     if (isNumeric(input) !== false) {
       const _num : number = (typeof input === 'string')
         ? parseInt(input)
         : input;
 
-      if (_num < _min) {
-        return _min;
+      if (_num < min) {
+        return min;
       } else {
-        return (_num < _max)
+        return (_num < max)
           ? _num
-          : _max;
+          : max;
       }
     } else {
-      return _default;
+      return defaultMax;
     }
 }
 
@@ -442,8 +462,6 @@ export const sanitiseText = (input: string, modifiers : sanTxtMods = {}) : strin
   // the string
   return output.trim().substring(maxLen).trim();
 };
-
-
 
 /**
  * Sanitise characters that are to be used in a regex character class

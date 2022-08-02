@@ -185,19 +185,41 @@ export const moveInList = <item>(items : Array<item>, index: number, direction: 
   ];
 }
 
+/**
+ * Get a Date object from input
+ *
+ * @param input
+ *
+ * @returns If input is a string, this function will attempt to
+ *          create a Date object based on the string value.
+ *          (If string could not be parsed by Date, FALSE is returned)
+ *          If input is a number it is assumed to be an ECMAScript
+ *          timestamp (milliseconds after 1970-01-01)
+ */
 export const getDate = (input : any) : Date|false => {
   if (input instanceof Date) {
     return input;
   }
   const tO = typeof input;
-  if (tO === 'string' || tO === 'number') {
+  if (tO === 'string') {
+    const output = new Date(input);
+    return (output.toString() !== 'Invalid Date')
+      ? output
+      : false;
+  } else if (tO === 'number') {
     return new Date(input);
   } else {
     return false;
   }
 }
 
-
+/**
+ * Get a valid bool state value (either -1, 0 or 1)
+ *
+ * @param input Value to be converted
+ *
+ * @returns Either -1, 0 or 1
+ */
 export const getBoolState = (input : string|number) : UBoolState => {
   const output = (typeof input === 'string')
     ? parseInt(input)

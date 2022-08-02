@@ -6,13 +6,19 @@
   * [headConfig](#headconfig)
   * [tableData](#tabledata)
   * [html](#html)
-  * [lastFiltered](#lastfiltered)
+  * [caption](#caption)
   * [toggleCol](#togglecol)
-  * [allowExport](#allowexport)
-  * [fileName](#filename)
-  * [colSep](#colsep)
-  * [rowSep](#rowsep)
-  * [omitHeaders](#omitheaders)
+  * [moveCol](#movecols)
+  * [Attributes altered by user interactions](#attributes-altered-by-user-interactions)
+    * [lastFiltered](#lastfiltered)
+    * [lastAction](#lastaction)
+    * [lastActionSub](#lastactionsub)
+  * [Export related attributes](#export-related-attributes)
+    * [allowExport](#allowexport)
+    * [fileName](#filename)
+    * [colSep](#colsep)
+    * [rowSep](#rowsep)
+    * [omitHeaders](#omitheaders)
   * [doInit](#doinit)
   * [linkHandler](#linkhandler)
 * [As a stand-alone HTML web component](#as-a-stand-alone-html-web-component)
@@ -74,22 +80,64 @@ component in static HTML the `html` attribute tells the component
 to parse its inner HTML to extract the data that would normally 
 come from [headConfig](#headconfig) & [tableData](#tabledata)
 
-### `lastFiltered` 
+### `caption`
+
+* __Type:__ *{`string`}
+* __Default:__ *[`""`]* - (empty string)
+
+Contents of the table's `caption` attribute
+
+### Attributes altered by user interactions
+#### `lastFiltered` 
+
+* __Type:__ *{`string`}*
+* __Default:__ *[`""`]* - (empty string)
+
+Provides infomation (to the client application) of whicht field was 
+last change in the list of filter/sort controls or export controls
+
+Options are:
+* name of field - when details of a field are modified
+* `column-sep` - When column separator character for export is changed
+* `row-sep` - When row separator character for export is changed
+
+#### `lastAction` 
 
 * __Type:__ *{`string`}*
 * __Default:__ *[`""` (empty string)]*
 
-Provides infomation (to the client application) of what was last 
-change in the filter/sort controls or export controls
+What was the primary target for the last changed
 
-### `toggleCol` 
+Options are:
+* `filter` - something in the filter changed
+* `move-column` - table column/filter was moved either left or right
+* `is-column` - Toggle table column visibility
+* `move-export` - Export column was moved either left or right
+* `in-export` - Toggle field's inclusion in export data
+
+#### `lastActionSub` 
+
+* __Type:__ *{`string`}*
+* __Default:__ *[`""` (empty string)]*
+
+The filter control property that was last changed
+
+### `toggleCols` 
 
 * __Type:__ *{`boolean`}*
 * __Default:__ *[`false`]*
 
 Whether or not to allow users to toggle visibility of columns
 
-### `allowExport` 
+### `moveCols` 
+
+* __Type:__ *{`boolean`}*
+* __Default:__ *[`false`]*
+
+Whether or not user can change the order of columns
+
+### Export related attributes
+#### `allowExport` 
 
 * __Type:__ *{`boolean`}*
 * __Default:__ *[`false`]*
@@ -97,7 +145,7 @@ Whether or not to allow users to toggle visibility of columns
 Whether or not to allow users to download the contents of the table 
 as a delimited text file.
 
-### `fileName` 
+#### `fileName` 
 
 * __Type:__ *{`string`}*
 * __Default:__ *[`"file.tsv"`]*
@@ -106,21 +154,21 @@ If users are allowed to download the filtered & sorted contents of
 the table as a file, this provides the default file name for the 
 file.
 
-### `colSep` 
+#### `colSep` 
 
 * __Type:__ *{`string`}*
 * __Default:__ *[`"\t"`]*
 
 Character(s) used to separate column values in export file
 
-### `rowSep` 
+#### `rowSep` 
 
 * __Type:__ *{`string`}*
 * __Default:__ *[`"\n"`]*
 
 Character(s) used to separate rows in export file
 
-### `omitHeaders` 
+#### `omitHeaders` 
 
 * __Type:__ *{`boolean`}*
 * __Default:__ *[`false`]*
